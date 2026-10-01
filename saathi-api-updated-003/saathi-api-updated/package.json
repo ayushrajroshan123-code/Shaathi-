@@ -1,0 +1,23 @@
+{
+  "name": "saathi-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SAATHI Phase 1 pilot API — Express + PostgreSQL, matching database/schema.sql (frozen).",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node scripts/migrate.js",
+    "migrate:dry-run": "node scripts/migrate.js --dry-run",
+    "verify-schema": "node scripts/verify-schema.js",
+    "db:seed": "node scripts/seed.js",
+    "db:setup": "npm run migrate && npm run verify-schema"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
+  }
+}

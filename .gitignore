@@ -1,0 +1,35 @@
+﻿# Node modules
+node_modules/
+*/node_modules/
+*/*/node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Build
+dist/
+dist-ssr/
+build/
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# Temp/Cache
+.cache/
+temp/
+tmp/
