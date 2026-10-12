@@ -59,24 +59,8 @@ export const RESIDENTIAL_LOTS = [
       },
     ],
     resources: [
-      {
-        id: 'res-1',
-        name: 'Heavy-Duty 8ft Aluminum Step Ladder',
-        category: 'tools',
-        condition: 'Excellent',
-        location: 'Garden shed behind cafe patio',
-        available: true,
-        sharedBy: 'Dev Sharma',
-      },
-      {
-        id: 'res-2',
-        name: 'Heavy-Duty Outdoor Extension Cord (50ft)',
-        category: 'electrical',
-        condition: 'Good',
-        location: 'Hallway storage trunk',
-        available: true,
-        sharedBy: 'Kavita Sharma',
-      },
+      { id: 'res-1', name: 'Heavy-Duty 8ft Aluminum Step Ladder', category: 'tools', condition: 'Excellent', available: true },
+      { id: 'res-2', name: 'Heavy-Duty Outdoor Extension Cord (50ft)', category: 'electrical', condition: 'Good', available: true },
     ],
   },
   {
@@ -107,24 +91,8 @@ export const RESIDENTIAL_LOTS = [
       },
     ],
     resources: [
-      {
-        id: 'res-3',
-        name: 'DeWalt 20V Cordless Drill & Bit Set',
-        category: 'tools',
-        condition: 'Like New',
-        location: 'Ground floor workshop bench',
-        available: true,
-        sharedBy: 'Dr. Aris Thorne',
-      },
-      {
-        id: 'res-4',
-        name: 'Philips HeartStart Home AED',
-        category: 'medical',
-        condition: 'Certified / Inspected',
-        location: 'Front entry hall mount',
-        available: true,
-        sharedBy: 'Dr. Aris Thorne',
-      },
+      { id: 'res-3', name: 'DeWalt 20V Cordless Drill & Bit Set', category: 'tools', condition: 'Like New', available: true },
+      { id: 'res-4', name: 'Philips HeartStart Home AED', category: 'medical', condition: 'Certified / Inspected', available: true },
     ],
   },
   {
@@ -155,24 +123,8 @@ export const RESIDENTIAL_LOTS = [
       },
     ],
     resources: [
-      {
-        id: 'res-5',
-        name: 'Heavy-Duty Folding Utility Cargo Wagon',
-        category: 'transport',
-        condition: 'Good',
-        location: 'Side garden gate',
-        available: true,
-        sharedBy: 'Marcus Vance',
-      },
-      {
-        id: 'res-6',
-        name: 'Fiskars Telescoping Pole Tree Pruner (14ft)',
-        category: 'gardening',
-        condition: 'Sharp / Clean',
-        location: 'Backyard lean-to shed',
-        available: true,
-        sharedBy: 'Marcus Vance',
-      },
+      { id: 'res-5', name: 'Heavy-Duty Folding Utility Cargo Wagon', category: 'transport', condition: 'Good', available: true },
+      { id: 'res-6', name: 'Fiskars Telescoping Pole Tree Pruner (14ft)', category: 'gardening', condition: 'Sharp / Clean', available: true },
     ],
   },
   {
@@ -195,7 +147,7 @@ export const RESIDENTIAL_LOTS = [
       },
       {
         id: 'cov-8',
-        title: 'Neighborhood Lost-and-Found Depot',
+        title: 'Neighborhood Lost-and-Found Point',
         category: 'community',
         window: '9:00 AM – 7:00 PM',
         detail: 'Main drop point for lost keys, pet collars, and parcels.',
@@ -203,24 +155,8 @@ export const RESIDENTIAL_LOTS = [
       },
     ],
     resources: [
-      {
-        id: 'res-7',
-        name: 'Magliner Commercial Cargo Hand Truck (500 lb)',
-        category: 'transport',
-        condition: 'Heavy-Duty',
-        location: 'Rear loading dock bay',
-        available: true,
-        sharedBy: 'Elena Rostova',
-      },
-      {
-        id: 'res-8',
-        name: 'Flotec Submersible Sump Pump with 25ft Hose',
-        category: 'emergency',
-        condition: 'Tested last week',
-        location: 'Basement utility closet',
-        available: true,
-        sharedBy: 'Elena Rostova',
-      },
+      { id: 'res-7', name: 'Magliner Commercial Cargo Hand Truck (500 lb)', category: 'transport', condition: 'Heavy-Duty', available: true },
+      { id: 'res-8', name: 'Flotec Submersible Sump Pump with 25ft Hose', category: 'emergency', condition: 'Tested last week', available: true },
     ],
   },
   {
@@ -243,15 +179,7 @@ export const RESIDENTIAL_LOTS = [
       },
     ],
     resources: [
-      {
-        id: 'res-9',
-        name: 'Drive Medical Lightweight Folding Wheelchair',
-        category: 'mobility',
-        condition: 'Pristine',
-        location: 'Ground floor vestibule',
-        available: true,
-        sharedBy: 'Mrs. Martha Gable',
-      },
+      { id: 'res-9', name: 'Drive Medical Lightweight Folding Wheelchair', category: 'mobility', condition: 'Pristine', available: true },
     ],
   },
   {
@@ -282,25 +210,196 @@ export const RESIDENTIAL_LOTS = [
       },
     ],
     resources: [
-      {
-        id: 'res-10',
-        name: 'EcoFlow Delta 2 Solar Generator (1024Wh)',
-        category: 'energy',
-        condition: '100% Charged',
-        location: 'Rooftop workshop entry',
-        available: true,
-        sharedBy: 'Tariq Chen',
-      },
-      {
-        id: 'res-11',
-        name: '4K Aerial Inspection Drone (For Roof/Tree Checks)',
-        category: 'inspection',
-        condition: 'Ready for flight',
-        location: 'Penthouse office cabinet',
-        available: true,
-        sharedBy: 'Samira Chen',
-      },
+      { id: 'res-10', name: 'EcoFlow Delta 2 Solar Generator (1024Wh)', category: 'energy', condition: '100% Charged', available: true },
+      { id: 'res-11', name: '4K Aerial Inspection Drone (For Roof/Tree Checks)', category: 'inspection', condition: 'Ready for flight', available: true },
     ],
+  },
+];
+
+// -----------------------------------------------------------------------------
+// 1B. SHARED RESOURCES (Standalone community resources - decoupled from lots)
+// Rule: DISCOVER THE RESOURCE, NOT THE PERSON.
+// -----------------------------------------------------------------------------
+export const SHARED_RESOURCES = [
+  {
+    id: 'res-1',
+    name: 'Heavy-Duty 8ft Aluminum Step Ladder',
+    category: 'tools',
+    condition: 'Excellent',
+    generalArea: 'Greenwood Commons · South Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-dev-01', name: 'Dev Sharma', lotId: 1 },
+  },
+  {
+    id: 'res-2',
+    name: 'Heavy-Duty Outdoor Extension Cord (50ft)',
+    category: 'electrical',
+    condition: 'Good',
+    generalArea: 'Greenwood Commons · South Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-kavita-01', name: 'Kavita Sharma', lotId: 1 },
+  },
+  {
+    id: 'res-3',
+    name: 'DeWalt 20V Cordless Drill & Bit Set',
+    category: 'tools',
+    condition: 'Like New',
+    generalArea: 'Greenwood Commons · West Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-aris-02', name: 'Dr. Aris Thorne', lotId: 2 },
+  },
+  {
+    id: 'res-4',
+    name: 'Philips HeartStart Home AED',
+    category: 'medical',
+    condition: 'Certified / Inspected',
+    generalArea: 'Greenwood Commons · West Quadrant',
+    handoffPolicy: 'Community pickup / Emergency Standby',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-aris-02', name: 'Dr. Aris Thorne', lotId: 2 },
+  },
+  {
+    id: 'res-5',
+    name: 'Heavy-Duty Folding Utility Cargo Wagon',
+    category: 'transport',
+    condition: 'Good',
+    generalArea: 'Greenwood Commons · West Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-marcus-03', name: 'Marcus Vance', lotId: 3 },
+  },
+  {
+    id: 'res-6',
+    name: 'Fiskars Telescoping Pole Tree Pruner (14ft)',
+    category: 'gardening',
+    condition: 'Sharp / Clean',
+    generalArea: 'Greenwood Commons · West Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: false, // in use by Sarah Chen
+    _owner: { id: 'usr-marcus-03', name: 'Marcus Vance', lotId: 3 },
+  },
+  {
+    id: 'res-7',
+    name: 'Magliner Commercial Cargo Hand Truck (500 lb)',
+    category: 'transport',
+    condition: 'Heavy-Duty',
+    generalArea: 'Greenwood Commons · North Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-sarah-04', name: 'Sarah Chen', lotId: 4 },
+  },
+  {
+    id: 'res-8',
+    name: 'Flotec Submersible Sump Pump with 25ft Hose',
+    category: 'emergency',
+    condition: 'Tested last week',
+    generalArea: 'Greenwood Commons · North Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-sarah-04', name: 'Sarah Chen', lotId: 4 },
+  },
+  {
+    id: 'res-9',
+    name: 'Drive Medical Lightweight Folding Wheelchair',
+    category: 'mobility',
+    condition: 'Pristine',
+    generalArea: 'Greenwood Commons · East Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-martha-05', name: 'Mrs. Martha Gable', lotId: 5 },
+  },
+  {
+    id: 'res-10',
+    name: 'EcoFlow Delta 2 Solar Generator (1024Wh)',
+    category: 'energy',
+    condition: '100% Charged',
+    generalArea: 'Greenwood Commons · East Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-tariq-06', name: 'Tariq Chen', lotId: 6 },
+  },
+  {
+    id: 'res-11',
+    name: '4K Aerial Inspection Drone (For Roof/Tree Checks)',
+    category: 'inspection',
+    condition: 'Ready for flight',
+    generalArea: 'Greenwood Commons · East Quadrant',
+    handoffPolicy: 'Community pickup at Cafe Courtyard',
+    allowedRequesters: 'Verified neighborhood members',
+    requiresApproval: true,
+    available: true,
+    _owner: { id: 'usr-samira-06', name: 'Samira Chen', lotId: 6 },
+  },
+];
+
+// -----------------------------------------------------------------------------
+// 1C. BORROW REQUESTS (Awaiting owner approval or active in lifecycle)
+// -----------------------------------------------------------------------------
+export const BORROW_REQUESTS = [
+  {
+    id: 'req-incoming-1',
+    resourceId: 'res-7',
+    resourceName: 'Magliner Commercial Cargo Hand Truck (500 lb)',
+    ownerId: 'usr-sarah-04',
+    requesterId: 'usr-aris-02',
+    requesterName: 'Dr. Aris Thorne',
+    purpose: 'Moving medical care storage boxes to clinic corner',
+    requestedTime: 'Today · 6:00 PM',
+    duration: '~1 hour',
+    handoffPreference: 'Community pickup at Cafe Courtyard',
+    message: 'Can bring it right back by 7:15 PM.',
+    status: 'REQUESTED', // 'REQUESTED' | 'APPROVED' | 'DECLINED' | 'BLOCKED' | 'CANCELLED'
+    createdAt: 'Today · 45m ago',
+    requesterTrust: {
+      verified: true,
+      membershipAge: '14 months',
+      completedCoordinations: 9,
+      noOutstandingReturns: true,
+    },
+  },
+  {
+    id: 'req-outgoing-1',
+    resourceId: 'res-3',
+    resourceName: 'DeWalt 20V Cordless Drill & Bit Set',
+    ownerId: 'usr-aris-02',
+    requesterId: 'usr-sarah-04',
+    requesterName: 'Sarah Chen',
+    purpose: 'Mounting a small herb wall rack in kitchen',
+    requestedTime: 'Tomorrow · 2:00 PM',
+    duration: '~2 hours',
+    handoffPreference: 'Community pickup at Cafe Courtyard',
+    message: 'Happy to pick up at the cafe courtyard.',
+    status: 'REQUESTED',
+    createdAt: 'Today · 20m ago',
+    requesterTrust: {
+      verified: true,
+      membershipAge: '8 months',
+      completedCoordinations: 6,
+      noOutstandingReturns: true,
+    },
   },
 ];
 
@@ -353,35 +452,118 @@ export const NEIGHBORHOOD_ISSUES = [
 ];
 
 // -----------------------------------------------------------------------------
-// 3. MY COORDINATION (Compact, non-intrusive)
+// 3. COORDINATION RECORDS (Canonical state machine implementation)
+// States: REQUESTED -> APPROVED -> SCHEDULED -> HANDOFF_READY -> HANDED_OVER -> IN_USE -> RETURN_DUE -> RETURN_PENDING -> COMPLETED
 // -----------------------------------------------------------------------------
-export const MY_COORDINATION = [
+export const COORDINATION_RECORDS = [
+  {
+    id: 'coord-2',
+    requestId: 'req-fiskars-0',
+    resourceId: 'res-6',
+    resourceName: 'Fiskars Telescoping Pole Tree Pruner (14ft)',
+    title: 'Borrowing Pole Pruner',
+    role: 'borrowing', // 'borrowing' | 'lending' | 'helping'
+    counterpartRole: 'Owner',
+    counterpartDisplay: 'Marcus (Verified Neighbor)',
+    ownerId: 'usr-marcus-03',
+    requesterId: 'usr-sarah-04',
+    state: 'IN_USE',
+    status: 'in_use', // backward compatibility
+    purpose: 'Trimming dried oak branches near garden walkway',
+    handoffLocation: 'Cafe Courtyard',
+    scheduledTime: 'Yesterday · 4:00 PM',
+    dueTime: 'Tomorrow · 10:00 AM',
+    time: 'Tomorrow · 10:00 AM',
+    borrowerReturnInitiated: false,
+    ownerReturnConfirmed: false,
+    type: 'receiving',
+    badge: 'Resource',
+    actionText: 'View Details',
+  },
   {
     id: 'coord-1',
-    type: 'giving',
+    requestId: 'req-plants-0',
+    resourceId: null,
+    resourceName: 'Indoor Ferns & Plant Care',
     title: 'Watering Ferns for Dr. Thorne',
-    counterpart: 'Dr. Aris Thorne',
-    lotName: 'Lot 2',
-    time: 'Today · 6:00 PM',
-    dueTime: 'Today · 6:00 PM',
+    role: 'helping',
+    counterpartRole: 'Neighbor',
+    counterpartDisplay: 'Dr. Thorne (Verified Neighbor)',
+    ownerId: 'usr-aris-02',
+    requesterId: 'usr-sarah-04',
+    state: 'SCHEDULED',
     status: 'upcoming',
+    purpose: 'Plant watering coverage during medical symposium',
+    handoffLocation: 'Agreed arrangement',
+    scheduledTime: 'Today · 6:00 PM',
+    dueTime: 'Today · 6:00 PM',
+    time: 'Today · 6:00 PM',
+    borrowerReturnInitiated: false,
+    ownerReturnConfirmed: false,
+    type: 'giving',
     badge: 'Coverage',
     actionText: 'Mark Done',
   },
   {
-    id: 'coord-2',
+    id: 'coord-completed-1',
+    requestId: 'req-ladder-past',
+    resourceId: 'res-1',
+    resourceName: 'Heavy-Duty 8ft Aluminum Step Ladder',
+    title: 'Borrowed Step Ladder',
+    role: 'borrowing',
+    counterpartRole: 'Neighbor',
+    counterpartDisplay: 'Verified Neighbor',
+    ownerId: 'usr-dev-01',
+    requesterId: 'usr-sarah-04',
+    state: 'COMPLETED',
+    status: 'completed',
+    purpose: 'Window cleaning',
+    handoffLocation: 'Cafe Courtyard',
+    scheduledTime: 'Oct 2 · 11:00 AM',
+    dueTime: 'Oct 2 · 2:30 PM',
+    time: 'Oct 2 · 2:30 PM',
+    completedAt: 'Oct 2 · 2:30 PM',
     type: 'receiving',
-    title: 'Borrowing Pole Pruner from Marcus',
-    resourceName: 'Fiskars Telescoping Pole Tree Pruner (14ft)',
-    counterpart: 'Marcus Vance',
-    lotName: 'Lot 3',
-    time: 'Tomorrow · 10:00 AM',
-    dueTime: 'Tomorrow · 10:00 AM',
-    status: 'confirmed',
     badge: 'Resource',
-    actionText: 'View Details',
+    actionText: 'View History',
   },
 ];
+
+export const COORDINATION_EVENTS = [
+  {
+    id: 'ev-1',
+    type: 'COORDINATION_CREATED',
+    coordinationId: 'coord-2',
+    timestamp: 'Yesterday · 4:00 PM',
+    summary: 'Fiskars pole pruner handoff completed at Cafe Courtyard',
+  },
+];
+
+export const BLOCKED_USERS = [];
+
+export const SAFETY_REPORTS = [];
+
+export const COORDINATION_MESSAGES = [
+  {
+    id: 'msg-1',
+    coordinationId: 'coord-2',
+    senderId: 'usr-marcus-03',
+    senderName: 'Marcus',
+    text: 'Pole is placed at the cafe courtyard hook. Pruner blade is freshly oiled.',
+    timestamp: 'Yesterday · 3:55 PM',
+  },
+];
+
+// Compatibility export
+export const MY_COORDINATION = COORDINATION_RECORDS.filter(
+  (c) => c.state !== 'COMPLETED' && c.status !== 'completed'
+).map((c) => ({
+  ...c,
+  status: c.id === 'coord-2' ? 'confirmed' : c.status,
+  counterpart: c.ownerId === 'usr-aris-02' ? 'Dr. Aris Thorne' : c.ownerId === 'usr-marcus-03' ? 'Marcus Vance' : (c.counterpart || ''),
+  lotId: c.lotId || (c.ownerId === 'usr-aris-02' ? 2 : c.ownerId === 'usr-marcus-03' ? 3 : 1),
+  lotName: c.lotName || (c.ownerId === 'usr-aris-02' ? 'Lot 2' : c.ownerId === 'usr-marcus-03' ? 'Lot 3' : 'Lot 1'),
+}));
 
 // -----------------------------------------------------------------------------
 // 3B. NEIGHBORHOOD QUERIES (Shared practical need coordination, NOT polls)

@@ -2260,60 +2260,219 @@ button {
 .ln-section {
   position: relative;
   width: 100%;
-  height: 160vh; /* Deliberate editorial breathing space for 3D neighborhood */
   background-color: var(--bg-primary);
   contain: layout paint;
 }
 
-.ln-sticky-wrap {
-  position: sticky;
-  top: 0;
+/* ==============================================================
+   SHOWCASE HEADER & STORY SELECTORS (Tactile Editorial Pills)
+   ============================================================== */
+
+.ln-showcase-bar {
   width: 100%;
-  height: 100vh;
-  height: 100svh;
-  overflow: hidden;
+  background-color: #F6F7FA;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ln-showcase-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(38px, 4.8vh, 56px) clamp(24px, 4vw, 64px) 26px clamp(24px, 4vw, 64px);
+}
+
+.ln-showcase-title {
+  font-family: var(--font-family);
+  font-size: clamp(24px, 2.8vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #111111;
+  margin: 0 0 22px 0;
+  line-height: 1.15;
+}
+
+.ln-story-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 /* ==============================================================
-   EYEBROW — editorial label floating over the top-left of canvas
+   TACTILE STORY PILL — Inspired by Hardware Reference
    ============================================================== */
 
-.ln-eyebrow {
-  position: absolute;
-  top: 40px;
-  left: clamp(24px, 4vw, 64px);
-  z-index: 4;
+.ln-story-pill {
+  background: #FFFFFF;
+  border: 1px solid rgba(18, 24, 38, 0.08);
+  border-radius: 9999px;
+  padding: 15px 22px 15px 26px;
+  min-width: 250px;
+  max-width: 310px;
+  flex: 1 1 250px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow:
+    0 4px 14px rgba(18, 24, 38, 0.07),
+    0 1px 3px rgba(18, 24, 38, 0.04);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition:
+    transform 0.22s var(--ease-cinematic),
+    box-shadow 0.22s var(--ease-cinematic),
+    border-color 0.22s ease,
+    background-color 0.22s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ln-story-pill:hover {
+  transform: translateY(-1.5px);
+  border-color: rgba(18, 24, 38, 0.13);
+  box-shadow:
+    0 8px 22px rgba(18, 24, 38, 0.10),
+    0 2px 6px rgba(18, 24, 38, 0.05);
+}
+
+.ln-story-pill:active {
+  transform: translateY(0.5px);
+  box-shadow:
+    0 2px 6px rgba(18, 24, 38, 0.06),
+    0 1px 2px rgba(18, 24, 38, 0.04);
+}
+
+.ln-story-pill--active {
+  background: #F9FAFB;
+  border-color: rgba(18, 24, 38, 0.28);
+  box-shadow:
+    0 4px 14px rgba(18, 24, 38, 0.12),
+    0 1px 3px rgba(18, 24, 38, 0.06);
+}
+
+.ln-story-pill--active:hover {
+  transform: translateY(-1px);
+  border-color: rgba(18, 24, 38, 0.35);
+  box-shadow:
+    0 6px 18px rgba(18, 24, 38, 0.14),
+    0 2px 5px rgba(18, 24, 38, 0.06);
+}
+
+.ln-story-pill-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.ln-story-pill-title {
+  font-family: var(--font-family);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #17181C;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.ln-story-pill--active .ln-story-pill-title {
+  color: #0A0A0E;
+  font-weight: 650;
+}
+
+.ln-story-pill-subtitle {
+  font-family: var(--font-family);
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #8C909A;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.ln-story-pill--active .ln-story-pill-subtitle {
+  color: #555963;
+}
+
+/* Tactile Cylindrical Peg on the right side */
+.ln-story-pill-peg {
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  pointer-events: none;
-  user-select: none;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 14px;
 }
 
-.ln-eyebrow-text {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  color: var(--text-secondary);
-  text-transform: uppercase;
+.ln-story-peg-core {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #E4E7ED;
+  box-shadow:
+    0 1px 3px rgba(18, 24, 38, 0.10),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(18, 24, 38, 0.06);
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease;
 }
 
-.ln-eyebrow-sep {
-  font-size: 10px;
-  color: var(--text-muted);
+.ln-story-pill:hover .ln-story-peg-core {
+  transform: scale(1.04);
+}
+
+.ln-story-pill--active .ln-story-peg-core {
+  background: #F59E0B;
+  box-shadow:
+    0 1px 3px rgba(217, 119, 6, 0.28),
+    inset 0 1px 1px rgba(255, 255, 255, 0.7);
+  border-color: #D97706;
+}
+
+.ln-beat-container {
+  min-height: 22px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.ln-beat-caption {
+  font-family: var(--font-family);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1F2937;
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.4;
+  transition: opacity 0.25s ease;
+}
+
+.ln-beat-caption--muted {
   font-weight: 400;
-}
-
-.ln-eyebrow-sub {
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
+  color: #9CA3AF;
 }
 
 /* ==============================================================
-   CANVAS MOUNT — the Three.js renderer fills this div
+   VIEWPORT WRAP & CANVAS MOUNT — Dedicated 3D Stage Below Controls
    ============================================================== */
+
+.ln-viewport-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(540px, 74vh, 880px);
+  overflow: hidden;
+  background: #FAF9F6;
+}
 
 .ln-canvas-mount {
   position: absolute;
@@ -2330,6 +2489,7 @@ button {
   width: 100% !important;
   height: 100% !important;
 }
+
 
 /* ==============================================================
    EDITORIAL CARDS — minimal HTML overlays

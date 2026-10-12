@@ -1,4 +1,11 @@
 import * as THREE from 'three';
+import { TrafficSystem } from './trafficSystem';
+import { DioramaPerson } from './dioramaPeople';
+import { BorrowingScenario } from './borrowingScenario';
+import { LadderScenario } from './ladderScenario';
+import { CarryScenario } from './carryScenario';
+import { ScenarioDirector } from './scenarioDirector';
+import { CameraDirector } from './cameraDirector';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createDioramaMaterials } from './dioramaMaterials';
 import { createDioramaPlatform } from './dioramaPlatform';
@@ -7,6 +14,7 @@ import { createDioramaBuildings } from './dioramaBuildings';
 import { createDioramaVehicles } from './dioramaVehicles';
 import { createDioramaProps } from './dioramaProps';
 import { setupDioramaLighting } from './dioramaLighting';
+import { StoryLabel } from './storyLabel';
 
 /**
  * NeighborhoodScene
@@ -24,11 +32,12 @@ export class NeighborhoodScene {
     this.animationFrameId = null;
     this.isDisposed = false;
 
-    // Visual Authority Isometric Camera Coordinates
-    // Rotated 45° azimuth, ~33° elevation viewing down the diagonal
-    this.defaultCameraPos = new THREE.Vector3(44, 40, 44);
-    this.defaultCameraTarget = new THREE.Vector3(0, 1.8, 0);
-    this.frustumSize = 48.0; // Frames diorama at ~73% usable viewport height with >= 60px edge clearance
+    // Balanced Visual Authority Viewpoint:
+    // Captures the complete neighborhood context (houses, roads, moving pink van, trees)
+    // while perfectly framing the central crosswalks and active character interactions.
+    this.defaultCameraPos = new THREE.Vector3(22.0, 17.0, 24.0);
+    this.defaultCameraTarget = new THREE.Vector3(0.0, 1.4, 0.8);
+    this.frustumSize = 22.0;
 
     // Reset Camera Animation State
     this.isResettingCamera = false;
@@ -114,7 +123,7 @@ export class NeighborhoodScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -131,10 +140,11 @@ export class NeighborhoodScene {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.target.copy(this.defaultCameraTarget);
+    this.controls.autoRotate = false; // Strictly disabled: camera remains stable
 
     // Zoom limits (OrthographicCamera uses zoom scale)
-    this.controls.minZoom = 0.6;
-    this.controls.maxZoom = 2.6;
+    this.controls.minZoom = 0.5;
+    this.controls.maxZoom = 3.5;
 
     // Polar angle limits (strictly above ground, prevents inverted viewing)
     this.controls.minPolarAngle = Math.PI / 8; // ~22.5°
@@ -183,7 +193,236 @@ export class NeighborhoodScene {
     this.props = createDioramaProps(this.materials);
     this.scene.add(this.props);
 
-    // 8. Event Listeners
+    this.trafficSystem = new TrafficSystem(this.scene);
+    
+    // Animated Residents: Female Resident + Second Neighbor Resident
+    this.demoResident = new DioramaPerson({ variant: 'girl' });
+    this.demoResident.root.name = 'DemoResident_Girl';
+    this.scene.add(this.demoResident.root);
+
+    this.demoNeighbor = new DioramaPerson({ variant: 'neighbor' });
+    this.demoNeighbor.root.name = 'DemoResident_Neighbor';
+    this.scene.add(this.demoNeighbor.root);
+
+    // Dedicated Characters for Ladder Story:
+    // Borrower (Peach Cottage, boy_blue) and Older Neighbor Lender (Building 3, ladder_lender from reference)
+    this.ladderBorrower = new DioramaPerson({ variant: 'boy_blue' });
+    this.ladderBorrower.root.name = 'DemoResident_LadderBorrower';
+    this.scene.add(this.ladderBorrower.root);
+    this.ladderBoy = this.ladderBorrower;
+
+    this.ladderLender = new DioramaPerson({ variant: 'ladder_lender' });
+    this.ladderLender.root.name = 'DemoResident_LadderLender';
+    this.scene.add(this.ladderLender.root);
+    this.ladderNeighbor = this.ladderLender;
+
+    // Helper resident for Carry Scenario (Streetwear Overalls & Bucket Hat Figurine from reference)
+    this.carryHelper = new DioramaPerson({ variant: 'helper' });
+    this.carryHelper.root.name = 'DemoResident_CarryHelper';
+    this.scene.add(this.carryHelper.root);
+
+    // Requester resident for Carry Scenario (Streetwear Cap, Bangs & Pink Bomber Figurine from Reference Image 1)
+    this.carryRequester = new DioramaPerson({ variant: 'carry_requester' });
+    this.carryRequester.root.name = 'DemoResident_CarryRequester';
+    this.scene.add(this.carryRequester.root);
+
+    // StoryLabel: World-anchored HTML dialogue annotation over 3D actors
+    this.storyLabel = new StoryLabel(this.container, this.camera);
+
+    // SAATHI Phase 3: Resident Neighbor Borrowing Interaction (drill scenario)
+    this.borrowingScenario = new BorrowingScenario(
+      this.scene,
+      this.demoResident,
+      this.demoNeighbor,
+      this.buildings,
+      this.renderer,
+      this.camera,
+      this.container,
+      this.storyLabel
+    );
+
+    // SAATHI Ladder Borrowing Interaction (full lifecycle)
+    this.ladderScenario = new LadderScenario(
+      this.scene,
+      this.ladderBorrower,
+      this.ladderLender,
+      this.buildings,
+      this.trafficSystem,
+      this.renderer,
+      this.camera,
+      this.container,
+      this.storyLabel
+    );
+
+    // SAATHI Phase 4: Help carry something (two completely new characters: carryRequester + carryHelper)
+    this.carryScenario = new CarryScenario(
+      this.scene,
+      this.carryRequester,
+      this.carryHelper,
+      this.buildings,
+      this.renderer,
+      this.camera,
+      this.container,
+      this.storyLabel
+    );
+
+    // CameraDirector: Central orchestrator of cinematic compositions and follow camera
+    this.cameraDirector = new CameraDirector({
+      camera: this.camera,
+      controls: this.controls,
+      defaultCameraPos: this.defaultCameraPos,
+      defaultCameraTarget: this.defaultCameraTarget,
+    });
+
+    // ScenarioDirector: Single orchestrator of landing-page stories
+    this.onBeat = null;
+    this.onStoryChange = null;
+    this.scenarioDirector = new ScenarioDirector({
+      borrowingScenario: this.borrowingScenario,
+      ladderScenario: this.ladderScenario,
+      carryScenario: this.carryScenario,
+      cameraDirector: this.cameraDirector,
+      onBeat: (text) => {
+        if (typeof this.onBeat === 'function') {
+          this.onBeat(text);
+        }
+      },
+      onStoryChange: (storyId) => {
+        if (typeof this.onStoryChange === 'function') {
+          this.onStoryChange(storyId);
+        }
+      }
+    });
+
+    // Register pedestrians with traffic system for zero-collision crosswalk safety
+    if (this.trafficSystem) {
+      this.trafficSystem.registerPedestrian(this.demoResident);
+      this.trafficSystem.registerPedestrian(this.demoNeighbor);
+      this.trafficSystem.registerPedestrian(this.ladderBoy);
+      this.trafficSystem.registerPedestrian(this.ladderNeighbor);
+      this.trafficSystem.registerPedestrian(this.carryRequester);
+      this.trafficSystem.registerPedestrian(this.carryHelper);
+    }
+
+    this.lastFrameTime = performance.now();
+
+    // 7B. Lot Highlight & Selection Indicators on Platform
+    this.lotHighlightIndicators = {};
+    const indicatorLotPositions = {
+      1: { x: 11.8, z: 11.6, r: 3.5 },
+      2: { x: -8.8, z: 8.8, r: 3.4 },
+      3: { x: -14.4, z: 13.0, r: 3.2 },
+      4: { x: -9.2, z: -9.2, r: 4.0 },
+      5: { x: 9.0, z: -9.0, r: 3.5 },
+      6: { x: 14.4, z: -12.8, r: 3.5 },
+    };
+
+    const indicatorsGroup = new THREE.Group();
+    indicatorsGroup.name = 'LotHighlightIndicators';
+
+    Object.entries(indicatorLotPositions).forEach(([lotIdStr, pos]) => {
+      const id = parseInt(lotIdStr, 10);
+      
+      // 1. Selection indicator: high contrast double ring (crisp dark + teal)
+      const selGroup = new THREE.Group();
+      selGroup.position.set(pos.x, 0.08, pos.z);
+      selGroup.rotation.x = -Math.PI / 2;
+      selGroup.visible = false;
+
+      const outerRingGeo = new THREE.RingGeometry(pos.r - 0.12, pos.r + 0.18, 36);
+      const outerRingMat = new THREE.MeshBasicMaterial({ color: 0x1A201E, side: THREE.DoubleSide });
+      const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+      selGroup.add(outerRing);
+
+      const innerRingGeo = new THREE.RingGeometry(pos.r - 0.38, pos.r - 0.15, 36);
+      const innerRingMat = new THREE.MeshBasicMaterial({ color: 0x2F8F8A, side: THREE.DoubleSide });
+      const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+      selGroup.add(innerRing);
+
+      // 2. Pulse filter indicator
+      const pulseGeo = new THREE.RingGeometry(pos.r - 0.22, pos.r + 0.08, 36);
+      const pulseMat = new THREE.MeshBasicMaterial({
+        color: 0x2F8F8A,
+        transparent: true,
+        opacity: 0.65,
+        side: THREE.DoubleSide,
+      });
+      const pulseRing = new THREE.Mesh(pulseGeo, pulseMat);
+      pulseRing.position.set(pos.x, 0.06, pos.z);
+      pulseRing.rotation.x = -Math.PI / 2;
+      pulseRing.visible = false;
+
+      indicatorsGroup.add(selGroup);
+      indicatorsGroup.add(pulseRing);
+
+      this.lotHighlightIndicators[id] = {
+        selectionRing: selGroup,
+        pulseRing: pulseRing,
+      };
+    });
+    this.scene.add(indicatorsGroup);
+
+    // 8. Event Listeners & 3D Raycasting for Lot Click vs Empty Scene Click
+    const LOT_NAME_MAP = {
+      Quad1_ForegroundCatBuilding: 1,
+      Quad2_Corner3StoryBuilding: 2,
+      Quad2_GabledPeachCottage: 3,
+      Quad3_RearAnchorMarketBuilding: 4,
+      Quad4_CornerExhaustBuilding: 5,
+      Quad4_RooftopGardenBuilding: 6,
+    };
+    this.raycaster = new THREE.Raycaster();
+    this.pointerDownPos = { x: 0, y: 0 };
+
+    this.onPointerDown = (e) => {
+      this.pointerDownPos = { x: e.clientX, y: e.clientY };
+    };
+
+    this.onPointerUp = (e) => {
+      if (this.isDisposed) return;
+      const dist = Math.hypot(e.clientX - this.pointerDownPos.x, e.clientY - this.pointerDownPos.y);
+      if (dist > 6) return; // User was orbiting/dragging, not clicking stationary
+
+      if (!this.renderer || !this.renderer.domElement) return;
+      const rect = this.renderer.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
+      this.raycaster.setFromCamera(mouse, this.camera);
+      const intersects = this.raycaster.intersectObjects(this.buildings ? this.buildings.children : [], true);
+
+      if (intersects.length > 0) {
+        let obj = intersects[0].object;
+        let foundLotId = null;
+        while (obj && obj !== this.scene) {
+          if (obj.userData && obj.userData.lotId) {
+            foundLotId = obj.userData.lotId;
+            break;
+          }
+          if (obj.name && LOT_NAME_MAP[obj.name]) {
+            foundLotId = LOT_NAME_MAP[obj.name];
+            break;
+          }
+          obj = obj.parent;
+        }
+        if (foundLotId) {
+          if (typeof this.onSelectLot === 'function') {
+            this.onSelectLot(foundLotId);
+          }
+          return;
+        }
+      }
+
+      // If user clicked empty diorama platform or background canvas
+      if (typeof this.onSelectEmptyScene === 'function') {
+        this.onSelectEmptyScene();
+      }
+    };
+
+    this.renderer.domElement.addEventListener('pointerdown', this.onPointerDown);
+    this.renderer.domElement.addEventListener('pointerup', this.onPointerUp);
+
     this.onWindowResize = this.onWindowResize.bind(this);
     window.addEventListener('resize', this.onWindowResize);
 
@@ -222,17 +461,15 @@ export class NeighborhoodScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   }
 
-  resetCamera() {
+  resetCamera(duration = 900) {
     this.isFocusingCamera = false;
     this.isAutoTouring = false;
     if (this.controls) {
       this.controls.autoRotate = false;
     }
-    this.isResettingCamera = true;
-    this.resetStartTime = performance.now();
-    this.resetStartPos.copy(this.camera.position);
-    this.resetStartTarget.copy(this.controls.target);
-    this.resetStartZoom = this.camera.zoom;
+    if (this.cameraDirector) {
+      this.cameraDirector.returnToEstablishing(duration);
+    }
   }
 
   focusOnLot(lotId) {
@@ -247,7 +484,6 @@ export class NeighborhoodScene {
     const target = lotPositions[lotId];
     if (!target) return;
 
-    this.isResettingCamera = false;
     this.isAutoTouring = false;
     if (this.controls) {
       this.controls.autoRotate = false;
@@ -262,6 +498,23 @@ export class NeighborhoodScene {
     // Maintain cinematic 45° elevation diagonal viewpoint offset
     this.focusTargetPos.set(target.x + 32, target.y + 30, target.z + 32);
     this.focusTargetZoom = 1.35;
+  }
+
+  setLotHighlights(highlightedLotIds = [], selectedLotId = null) {
+    if (!this.lotHighlightIndicators) return;
+    const highlightArr = Array.isArray(highlightedLotIds) ? highlightedLotIds : [];
+    Object.entries(this.lotHighlightIndicators).forEach(([lotIdStr, indicator]) => {
+      const id = parseInt(lotIdStr, 10);
+      const isSelected = selectedLotId === id;
+      const isHighlighted = highlightArr.includes(id);
+
+      if (indicator.selectionRing) {
+        indicator.selectionRing.visible = isSelected;
+      }
+      if (indicator.pulseRing) {
+        indicator.pulseRing.visible = isHighlighted && !isSelected;
+      }
+    });
   }
 
   setMode(mode, duration = 1500) {
@@ -347,32 +600,79 @@ export class NeighborhoodScene {
     return this.isAutoTouring;
   }
 
+  getActiveStory() {
+    return this.scenarioDirector ? this.scenarioDirector.getActiveStory() : null;
+  }
+
+  toggleScenario(id) {
+    if (!this.scenarioDirector) return null;
+    return this.scenarioDirector.toggleScenario(id);
+  }
+
+  playScenario(id) {
+    if (this.scenarioDirector) {
+      this.isFocusingCamera = false;
+      this.isAutoTouring = false;
+      this.scenarioDirector.playScenario(id);
+    }
+  }
+
+  stopScenario() {
+    if (this.scenarioDirector) {
+      this.scenarioDirector.stopScenario();
+    }
+  }
+
+  startStory() {
+    // In Phase 1, stories do not auto-play on scroll.
+    // They play on explicit user selection via playScenario(id).
+  }
+
+  pauseStory() {
+    if (this.scenarioDirector) {
+      this.scenarioDirector.pause();
+    }
+  }
+
+  resumeStory() {
+    if (this.scenarioDirector) {
+      this.scenarioDirector.resume();
+    }
+  }
+
+  resetStory() {
+    if (this.scenarioDirector) {
+      this.scenarioDirector.stopScenario();
+    }
+  }
 
   animate() {
     if (this.isDisposed) return;
     this.animationFrameId = requestAnimationFrame(this.animate);
 
-    // Smooth Reset Camera Interpolation
-    if (this.isResettingCamera) {
-      const now = performance.now();
-      const elapsed = now - this.resetStartTime;
-      const progress = Math.min(1, elapsed / this.resetDuration);
+    const now = performance.now();
+    const rawDelta = this.lastFrameTime ? (now - this.lastFrameTime) / 1000 : 0.016;
+    this.lastFrameTime = now;
+    const delta = Math.min(rawDelta, 0.05);
 
-      // Smooth quintic ease-in-out curve
-      const t = progress < 0.5 ? 16 * Math.pow(progress, 5) : 1 - Math.pow(-2 * progress + 2, 5) / 2;
+    if (this.trafficSystem) this.trafficSystem.update(delta);
+    if (this.scenarioDirector) this.scenarioDirector.update(delta);
+    if (this.demoResident) this.demoResident.update(delta);
+    if (this.demoNeighbor) this.demoNeighbor.update(delta);
+    if (this.ladderBoy) this.ladderBoy.update(delta);
+    if (this.ladderNeighbor) this.ladderNeighbor.update(delta);
+    if (this.carryRequester) this.carryRequester.update(delta);
+    if (this.carryHelper) this.carryHelper.update(delta);
+    if (this.scenarioDirector) this.scenarioDirector.postUpdate(delta);
 
-      this.camera.position.lerpVectors(this.resetStartPos, this.defaultCameraPos, t);
-      this.controls.target.lerpVectors(this.resetStartTarget, this.defaultCameraTarget, t);
-      this.camera.zoom = THREE.MathUtils.lerp(this.resetStartZoom, 1.0, t);
-      this.camera.updateProjectionMatrix();
+    // Update CameraDirector (cinematic follow, reframe, handoff, and return)
+    if (this.cameraDirector) {
+      this.cameraDirector.update(delta);
+    }
 
-      if (progress >= 1) {
-        this.isResettingCamera = false;
-        this.camera.position.copy(this.defaultCameraPos);
-        this.controls.target.copy(this.defaultCameraTarget);
-        this.camera.zoom = 1.0;
-        this.camera.updateProjectionMatrix();
-      }
+    // Update world-anchored story dialogue label projection
+    if (this.storyLabel) {
+      this.storyLabel.update();
     }
 
     // Smooth Focus Camera Interpolation
@@ -411,7 +711,13 @@ export class NeighborhoodScene {
       }
     }
 
-    this.controls.update();
+    // OrbitControls update only runs in idle ESTABLISHING mode so it never fights CameraDirector
+    if (!this.cameraDirector || this.cameraDirector.state === 'ESTABLISHING') {
+      if (this.controls) {
+        this.controls.update();
+      }
+    }
+
     this.renderer.render(this.scene, this.camera);
 
     if (this.onCameraUpdate) {
@@ -421,6 +727,18 @@ export class NeighborhoodScene {
 
   dispose() {
     this.isDisposed = true;
+    if (this.storyLabel) this.storyLabel.dispose();
+    if (this.cameraDirector) this.cameraDirector.dispose();
+    if (this.scenarioDirector) this.scenarioDirector.dispose();
+    if (this.trafficSystem) this.trafficSystem.dispose();
+    if (this.borrowingScenario) this.borrowingScenario.dispose();
+    if (this.ladderScenario) this.ladderScenario.dispose();
+    if (this.carryScenario) this.carryScenario.dispose();
+    if (this.demoResident && this.demoResident.dispose) this.demoResident.dispose();
+    if (this.demoNeighbor && this.demoNeighbor.dispose) this.demoNeighbor.dispose();
+    if (this.ladderBoy && this.ladderBoy.dispose) this.ladderBoy.dispose();
+    if (this.ladderNeighbor && this.ladderNeighbor.dispose) this.ladderNeighbor.dispose();
+    if (this.carryHelper && this.carryHelper.dispose) this.carryHelper.dispose();
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -436,6 +754,14 @@ export class NeighborhoodScene {
 
     if (this.onCanvasWheel && this.renderer && this.renderer.domElement) {
       this.renderer.domElement.removeEventListener('wheel', this.onCanvasWheel, { capture: true });
+    }
+
+    if (this.onPointerDown && this.renderer && this.renderer.domElement) {
+      this.renderer.domElement.removeEventListener('pointerdown', this.onPointerDown);
+    }
+
+    if (this.onPointerUp && this.renderer && this.renderer.domElement) {
+      this.renderer.domElement.removeEventListener('pointerup', this.onPointerUp);
     }
 
     if (this.lighting && this.lighting.dispose) {

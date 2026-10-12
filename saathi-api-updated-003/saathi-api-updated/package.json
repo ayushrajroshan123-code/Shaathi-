@@ -11,8 +11,16 @@
     "migrate": "node scripts/migrate.js",
     "migrate:dry-run": "node scripts/migrate.js --dry-run",
     "verify-schema": "node scripts/verify-schema.js",
+    "test": "node tests/phase2d_auth_suite.js && node tests/phase2d_malicious_scenario.js",
+    "test:phase2e": "node tests/phase2e_route_suite.js",
+    "test:phase2f": "node tests/phase2f_security_suite.js && node tests/phase2f_concurrency_suite.js && node tests/phase2f_privacy_suite.js && node tests/phase2f_cross_hub_suite.js",
+    "test:phase2g": "node tests/phase2g_queries_integration.js",
+    "test:all": "npm run test && npm run test:phase2e && npm run test:phase2f && npm run test:phase2g",
     "db:seed": "node scripts/seed.js",
-    "db:setup": "npm run migrate && npm run verify-schema"
+    "db:setup": "npm run migrate && npm run verify-schema",
+    "demo:seed": "node scripts/seed_demo.js",
+    "demo:reset": "node scripts/reset_demo.js",
+    "test:demo": "node tests/phase2h_demo_boundary_test.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

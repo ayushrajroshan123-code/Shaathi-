@@ -3,7 +3,19 @@
  * Interactive behaviors, particle field, scroll observers, and modal logic
  */
 
-const API_BASE_URL = 'http://localhost:3000';
+function resolveApiBaseUrl() {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
+    const url = import.meta.env.VITE_API_BASE_URL.trim();
+    if (url) return url.replace(/\/+$/, '');
+  }
+  const isProd = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD;
+  if (isProd) {
+    console.error('[main.js] VITE_API_BASE_URL is missing in production environment');
+    return '';
+  }
+  return 'http://localhost:3000';
+}
+const API_BASE_URL = resolveApiBaseUrl();
 const PILOT_HUB_ID = '00000000-0000-0000-0000-000000000001';
 
 document.addEventListener('DOMContentLoaded', () => {

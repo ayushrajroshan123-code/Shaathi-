@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { apiClient } from '../api/client';
+import { auth } from '../api/auth';
 
-const API_BASE_URL = 'http://localhost:3000';
 const PILOT_HUB_ID = '00000000-0000-0000-0000-000000000001';
 
 export default function CommunityModal({ isOpen, onClose }) {
@@ -50,20 +51,14 @@ export default function CommunityModal({ isOpen, onClose }) {
     setSignupFeedback({ text: '', type: '' });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hub_id: PILOT_HUB_ID,
-          name: regName.trim(),
-          email: regEmail.trim(),
-          password: regPassword,
-        }),
+      const data = await apiClient.post('/auth/signup', {
+        hub_id: PILOT_HUB_ID,
+        name: regName.trim(),
+        email: regEmail.trim(),
+        password: regPassword,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.account_status === 'pending_approval') {
+      if (data && data.account_status === 'pending_approval') {
         setSignupFeedback({
           text: 'Registration submitted! Your request is pending pilot coordinator approval.',
           type: 'feedback-success',
@@ -73,14 +68,14 @@ export default function CommunityModal({ isOpen, onClose }) {
         setRegPassword('');
       } else {
         setSignupFeedback({
-          text: data.message || data.error || 'Failed to submit registration.',
-          type: 'feedback-error',
+          text: data?.message || data?.error || 'Registration submitted.',
+          type: 'feedback-success',
         });
       }
     } catch (err) {
       setSignupFeedback({
-        text: 'Registration noted for SAATHI Pilot Hub. (Local API offline)',
-        type: 'feedback-success',
+        text: err.message || 'Failed to submit registration.',
+        type: 'feedback-error',
       });
     } finally {
       setSignupLoading(false);
@@ -95,31 +90,20 @@ export default function CommunityModal({ isOpen, onClose }) {
     setLoginFeedback({ text: '', type: '' });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: loginEmail.trim(),
-          password: loginPassword,
-        }),
+      const { user, role } = await auth.login(loginEmail.trim(), loginPassword);
+      setLoginFeedback({
+        text: `Signed in as ${user.name || role}. Entering dashboard...`,
+        type: 'feedback-success',
       });
-
-      const data = await response.json();
-
-      if (response.ok && data.token) {
-        setLoginFeedback({
-          text: `Signed in as ${data.role}. Session active.`,
-          type: 'feedback-success',
-        });
-      } else {
-        setLoginFeedback({
-          text: data.message || data.error || 'Invalid credentials or inactive account.',
-          type: 'feedback-error',
-        });
-      }
+      setTimeout(() => {
+        onClose();
+        if (typeof window !== 'undefined') {
+          window.location.hash = '#dashboard';
+        }
+      }, 400);
     } catch (err) {
       setLoginFeedback({
-        text: 'Unable to connect to local authentication server.',
+        text: err.message || 'Invalid credentials or inactive account.',
         type: 'feedback-error',
       });
     } finally {

@@ -1,0 +1,178 @@
+{
+  "_comment": "Generated from database/schema.sql + migrations/002_auth.sql + migrations/003_coordination.sql + migrations/004_phase2c_final_audit.sql. Used by scripts/verify-schema.js to confirm a live database matches the canonical artifacts. Regenerate by hand alongside any new migration — this file is not auto-derived from SQL.",
+  "tables": {
+    "hubs": {
+      "columns": ["hub_id", "name", "type", "roster_source", "created_at", "emergency_mode"],
+      "indexes": []
+    },
+    "users": {
+      "columns": [
+        "user_id", "hub_id", "name", "role", "contact_preferences",
+        "notification_endpoints", "emergency_contact_user_id", "is_active", "created_at",
+        "email", "password_hash", "account_status", "approved_by", "approved_at"
+      ],
+      "indexes": ["idx_users_hub_id"]
+    },
+    "verification_records": {
+      "columns": ["record_id", "user_id", "method", "verified_by", "tier", "verified_at", "expires_at", "notes"],
+      "indexes": ["idx_verification_records_user_id", "idx_verification_records_active_window"]
+    },
+    "task_taxonomy": {
+      "columns": ["task_type", "risk_level", "required_verification_tier", "launch_allowed"],
+      "indexes": []
+    },
+    "coverage_requests": {
+      "columns": [
+        "request_id", "task_type", "requested_by", "assigned_to", "date",
+        "time_window_start", "time_window_end", "location", "status", "notes",
+        "created_at", "completed_at"
+      ],
+      "indexes": ["idx_coverage_requests_hub_lookup", "idx_coverage_requests_assigned"],
+      "triggers": ["trg_coverage_task_launch_allowed", "trg_coverage_completion"]
+    },
+    "access_handoffs": {
+      "columns": [
+        "handoff_id", "coverage_request_id", "access_type", "provided_at",
+        "returned_at", "requester_confirmed", "volunteer_confirmed", "created_at"
+      ],
+      "indexes": ["idx_access_handoffs_coverage_request"]
+    },
+    "resource_inventory": {
+      "columns": [
+        "resource_id", "owner_id", "type", "condition", "availability_window_start",
+        "availability_window_end", "emergency_opt_in", "location", "is_active", "created_at",
+        "hub_id", "name", "general_area", "handoff_policy", "allowed_requesters", "requires_approval"
+      ],
+      "indexes": ["idx_resource_inventory_owner", "idx_resource_inventory_hub_id"]
+    },
+    "resource_requests": {
+      "columns": [
+        "request_id", "resource_id", "requested_by", "time_window_start", "time_window_end",
+        "status", "handoff_method", "requester_confirmed_handoff", "requester_confirmed_return",
+        "created_at", "requester_id", "purpose", "duration", "handoff_preference", "message", "decline_reason"
+      ],
+      "indexes": ["idx_resource_requests_resource", "idx_resource_requests_requester"],
+      "triggers": ["trg_resource_request_not_owner", "trg_sync_resource_requests_requester"]
+    },
+    "coordinations": {
+      "columns": [
+        "coordination_id", "hub_id", "request_id", "coverage_request_id", "resource_id",
+        "requester_id", "counterpart_id", "title", "type", "state", "purpose",
+        "handoff_location", "scheduled_time", "due_time", "borrower_return_initiated",
+        "owner_return_confirmed", "created_at", "completed_at"
+      ],
+      "indexes": [
+        "idx_coordinations_requester_state", "idx_coordinations_counterpart_state",
+        "idx_coordinations_resource", "idx_coordinations_request", "idx_coordinations_hub"
+      ]
+    },
+    "coordination_events": {
+      "columns": [
+        "event_id", "coordination_id", "event_type", "actor_id", "summary", "created_at"
+      ],
+      "indexes": ["idx_coordination_events_coordination_time"],
+      "triggers": ["trg_coordination_events_immutable"]
+    },
+    "coordination_messages": {
+      "columns": [
+        "message_id", "coordination_id", "sender_id", "text", "message_type", "created_at"
+      ],
+      "indexes": ["idx_coordination_messages_coordination_time"]
+    },
+    "blocked_users": {
+      "columns": ["blocker_id", "blocked_user_id", "created_at"],
+      "indexes": ["idx_blocked_users_blocked"]
+    },
+    "neighborhood_issues": {
+      "columns": [
+        "issue_id", "hub_id", "title", "category", "severity", "general_location",
+        "reported_by", "status", "detail", "position_3d", "created_at"
+      ],
+      "indexes": ["idx_neighborhood_issues_hub_status"]
+    },
+    "neighborhood_queries": {
+      "columns": [
+        "query_id", "hub_id", "creator_id", "title", "description", "category",
+        "preferred_timing", "status", "created_at", "deleted_at"
+      ],
+      "indexes": ["idx_neighborhood_queries_hub_status"],
+      "triggers": ["trg_check_emergency_queries", "trg_check_query_edit_lock"]
+    },
+    "neighborhood_query_answers": {
+      "columns": [
+        "answer_id", "query_id", "creator_id", "body", "is_helpful", "created_at", "deleted_at"
+      ],
+      "indexes": ["idx_query_answers_query", "idx_query_answers_helpful"],
+      "triggers": ["trg_check_emergency_answers"]
+    },
+    "conduct_reports": {
+      "columns": [
+        "report_id", "reported_by", "reported_against", "context_type", "context_id",
+        "category", "description", "evidence", "status", "coordinator_id", "action_taken",
+        "repeat_pattern_flag", "created_at", "resolved_at"
+      ],
+      "indexes": ["idx_conduct_reports_reporter_target_time", "idx_conduct_reports_target_time", "idx_conduct_reports_status"],
+      "triggers": ["trg_conduct_repeat_pattern"]
+    },
+    "help_requests": {
+      "columns": [
+        "request_id", "incident_id", "requested_by", "need_type", "urgency", "location",
+        "status", "matched_helper_id", "created_at", "resolved_at"
+      ],
+      "indexes": ["idx_help_requests_incident"]
+    },
+    "incidents": {
+      "columns": [
+        "incident_id", "source", "priority_score", "priority_level", "status", "location",
+        "latitude", "longitude", "affected_people", "vulnerable_people", "created_at", "resolved_at"
+      ],
+      "indexes": ["idx_incidents_status_priority"]
+    },
+    "incident_helpers": {
+      "columns": ["incident_id", "user_id", "assigned_at"],
+      "indexes": []
+    },
+    "incident_resources": {
+      "columns": ["incident_id", "resource_id", "deployed_at"],
+      "indexes": []
+    },
+    "sos_events": {
+      "columns": [
+        "sos_id", "triggered_by", "incident_id", "location", "latitude", "longitude",
+        "battery_level", "timestamp", "accidental_protection_confirmed", "offline_stored"
+      ],
+      "indexes": ["idx_sos_events_incident"]
+    },
+    "emergency_alerts": {
+      "columns": ["alert_id", "level", "source", "affected_area", "issued_at"],
+      "indexes": []
+    },
+    "notifications": {
+      "columns": ["notification_id", "recipient_id", "type", "payload", "sent_at"],
+      "indexes": ["idx_notifications_recipient"]
+    },
+    "priority_overrides": {
+      "columns": [
+        "override_id", "incident_id", "coordinator_id", "previous_score", "new_score",
+        "previous_level", "new_level", "reason", "created_at"
+      ],
+      "indexes": []
+    },
+    "sessions": {
+      "columns": ["session_id", "user_id", "token_hash", "created_at", "expires_at", "revoked_at"],
+      "indexes": ["idx_sessions_user_id"]
+    }
+  },
+  "functions": [
+    "enforce_coverage_task_launch_allowed",
+    "enforce_coverage_completion",
+    "mark_conduct_repeat_pattern",
+    "enforce_resource_request_not_owner",
+    "prevent_coordination_event_mutation",
+    "sync_resource_requests_requester"
+  ],
+  "extensions": ["pgcrypto"],
+  "excluded_from_verification": {
+    "schema_migrations": "runner infrastructure (created by scripts/migrate.js), not part of the frozen domain schema"
+  }
+}

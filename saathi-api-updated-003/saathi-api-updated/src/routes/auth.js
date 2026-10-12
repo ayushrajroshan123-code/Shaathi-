@@ -93,6 +93,39 @@ publicRouter.post('/login', async (req, res, next) => {
   }
 });
 
+// GET /auth/me — Server-authoritative self-profile bootstrap for the active session.
+// Protected by loadActor middleware: token must be valid, active, and unrevoked.
+// Strict field allowlist: returns only verified fields required by the client;
+// never exposes password_hash, token hashes, or internal administrative metadata.
+protectedRouter.get('/me', async (req, res, next) => {
+  try {
+    const { rows } = await query(
+      `SELECT user_id, hub_id, name, email, role, account_status, is_active, created_at
+       FROM users WHERE user_id = $1`,
+      [req.actor.user_id]
+    );
+    if (rows.length === 0) {
+      throw new ApiError(401, 'UNAUTHENTICATED', 'user profile not found');
+    }
+    const user = rows[0];
+    if (user.account_status !== 'active' || !user.is_active) {
+      throw new ApiError(403, 'ACCOUNT_INACTIVE', 'account is not active');
+    }
+    res.json({
+      user_id: user.user_id,
+      hub_id: user.hub_id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      account_status: user.account_status,
+      is_active: user.is_active,
+      created_at: user.created_at,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /auth/logout — revokes the calling session only (not all of the
 // user's sessions on other devices).
 protectedRouter.post('/logout', async (req, res, next) => {

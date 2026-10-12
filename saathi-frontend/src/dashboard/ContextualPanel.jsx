@@ -22,7 +22,7 @@ import {
   NEIGHBORHOOD_ISSUES,
   NEIGHBORHOOD_QUERIES,
 } from './dashboardData';
-
+import { addAnswer, markAnswerHelpful, clearHelpfulAnswer } from '../api/queries.js';
 /**
  * ContextualPanel
  * Positioned below the 3D neighborhood workspace.
@@ -45,9 +45,11 @@ export default function ContextualPanel({
   onCoordinateQuery,
   onCompleteQuery,
   pulseList = NEIGHBORHOOD_PULSE,
-  queries = NEIGHBORHOOD_QUERIES,
+  queriesList = [],
 }) {
   const [actionFeedback, setActionFeedback] = useState('');
+  const [newAnswer, setNewAnswer] = useState('');
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
 
   const triggerAction = (msg) => {
     setActionFeedback(msg);
@@ -463,7 +465,7 @@ export default function ContextualPanel({
     const query = selectedItem;
     const isIncluded = !!query.currentUserIncluded;
     const isCoordinating = query.status === 'coordinating';
-    const isCompleted = query.status === 'completed';
+    const isCompleted = query.status === 'completed' || query.status === 'resolved';
 
     return (
       <div className="saathi-contextual-panel query-contextual-panel" role="region" aria-label="Neighborhood Query Detail">
@@ -645,6 +647,76 @@ export default function ContextualPanel({
                   </div>
                 )}
               </div>
+
+              {/* NEIGHBORHOOD QUERIES: ANSWERS & HELPFUL SELECTION */}
+              <div className="query-answers-section" style={{ marginTop: '24px', borderTop: '1px solid var(--saathi-border)', paddingTop: '16px' }}>
+                <h4 className="column-label">ANSWERS ({query.answers?.length || 0})</h4>
+                
+                <div className="query-answers-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                  {(query.answers || []).map(ans => (
+                    <div key={ans.answer_id} style={{ padding: '12px', background: 'var(--saathi-bg-inset)', borderRadius: '6px' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--saathi-text-secondary)', marginBottom: '4px' }}>
+                        {new Date(ans.created_at).toLocaleString()}
+                      </div>
+                      <div style={{ fontSize: '14px', marginBottom: '8px' }}>{ans.body}</div>
+                      
+                      <button
+                        type="button"
+                        className={`btn-secondary ${ans.is_helpful ? 'helpful-active' : ''}`}
+                        style={{ padding: '4px 8px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: ans.is_helpful ? 'var(--saathi-primary-light)' : undefined }}
+                        onClick={async () => {
+                          try {
+                            if (ans.is_helpful) {
+                              await clearHelpfulAnswer(query.id || query.query_id, ans.answer_id);
+                              triggerAction("Helpful mark cleared.");
+                            } else {
+                              await markAnswerHelpful(query.id || query.query_id, ans.answer_id);
+                              triggerAction("Answer marked as helpful!");
+                            }
+                          } catch (err) {
+                            triggerAction("Failed to update helpful status.");
+                          }
+                        }}
+                      >
+                        <Check size={12} />
+                        {ans.is_helpful ? 'Helpful (Clear)' : 'Mark Helpful'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="query-answer-input-box" style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    className="ask-text-input" 
+                    placeholder="Add an answer..." 
+                    value={newAnswer}
+                    onChange={(e) => setNewAnswer(e.target.value)}
+                    style={{ flex: 1, padding: '8px 12px' }}
+                    disabled={isCompleted}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn-primary"
+                    disabled={!newAnswer.trim() || isSubmittingAnswer || isCompleted}
+                    onClick={async () => {
+                      if (!newAnswer.trim()) return;
+                      setIsSubmittingAnswer(true);
+                      try {
+                        await addAnswer(query.id || query.query_id, { body: newAnswer.trim() });
+                        setNewAnswer('');
+                        triggerAction("Answer added successfully!");
+                      } catch (err) {
+                        triggerAction("Failed to add answer.");
+                      } finally {
+                        setIsSubmittingAnswer(false);
+                      }
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -655,7 +727,7 @@ export default function ContextualPanel({
   // ---------------------------------------------------------------------------
   // 5. DEFAULT OVERVIEW: NEIGHBORHOOD PULSE (Clean Editorial Stream)
   // ---------------------------------------------------------------------------
-  const activeSharedQuery = (queries || []).find((q) => q.status === 'open');
+  const activeSharedQuery = (queriesList || []).find((q) => q.status === 'open');
 
   return (
     <div className="saathi-contextual-panel pulse-panel" role="region" aria-label="Neighborhood Pulse">
@@ -677,7 +749,7 @@ export default function ContextualPanel({
                 className="pulse-timeline-row clickable-pulse-row"
                 onClick={() => {
                   if (item.type === 'query') {
-                    const targetQuery = (queries || []).find((q) => q.id === (item.queryId || item.relatedId)) || {
+                    const targetQuery = (queriesList || []).find((q) => q.id === (item.queryId || item.relatedId) || q.query_id === (item.queryId || item.relatedId)) || {
                       id: item.queryId || 'query-1',
                       title: item.title || 'AC servicing',
                       description: 'Several homes in Greenwood Commons are interested in AC servicing this week.',

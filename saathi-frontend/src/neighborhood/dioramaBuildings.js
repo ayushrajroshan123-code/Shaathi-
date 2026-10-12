@@ -383,56 +383,159 @@ export function createDioramaBuildings(materials) {
     } = options;
 
     const doorGroup = new THREE.Group();
+    doorGroup.name = 'DoorGroup';
     const depth = 0.16;
     const border = 0.08;
 
+    // 1. Fixed Door Frame
+    const frameGroup = new THREE.Group();
+    frameGroup.name = 'DoorFrame';
+    doorGroup.add(frameGroup);
+
     const top = new THREE.Mesh(new THREE.BoxGeometry(w, border, depth), frameMat);
     top.position.set(0, h / 2 - border / 2, 0);
-    doorGroup.add(top);
+    top.castShadow = true;
+    frameGroup.add(top);
 
     const left = new THREE.Mesh(new THREE.BoxGeometry(border, h - border, depth), frameMat);
     left.position.set(-w / 2 + border / 2, -border / 2, 0);
-    doorGroup.add(left);
+    left.castShadow = true;
+    frameGroup.add(left);
 
     const right = new THREE.Mesh(new THREE.BoxGeometry(border, h - border, depth), frameMat);
     right.position.set(w / 2 - border / 2, -border / 2, 0);
-    doorGroup.add(right);
-
-    const slabW = w - 2 * border;
-    const slabH = h - border;
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(slabW, slabH, 0.06), doorMat);
-    slab.position.set(0, -border / 2, -0.02);
-    doorGroup.add(slab);
-
-    if (hasGlass) {
-      const gW = isDouble ? (slabW - 0.12) / 2 : slabW * 0.7;
-      const gH = slabH * 0.42;
-      const glass = new THREE.Mesh(new THREE.PlaneGeometry(gW, gH), materials.glassSkyReflect);
-      glass.position.set(0, slabH * 0.22, 0.015);
-      doorGroup.add(glass);
-
-      const gFrame = new THREE.Mesh(new THREE.BoxGeometry(gW + 0.04, gH + 0.04, 0.04), frameMat);
-      gFrame.position.set(0, slabH * 0.22, 0.01);
-      doorGroup.add(gFrame);
-    }
-
-    const handleGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.16, 8);
-    if (isDouble) {
-      [-0.08, 0.08].forEach((hx) => {
-        const handle = new THREE.Mesh(handleGeo, materials.metalBrass);
-        handle.position.set(hx, -0.15, 0.04);
-        doorGroup.add(handle);
-      });
-    } else {
-      const handle = new THREE.Mesh(handleGeo, materials.metalBrass);
-      handle.position.set(slabW * 0.35, -0.15, 0.04);
-      doorGroup.add(handle);
-    }
+    right.castShadow = true;
+    frameGroup.add(right);
 
     const threshold = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.04, depth + 0.12), materials.curb);
     threshold.position.set(0, -h / 2 + 0.02, 0.05);
     threshold.receiveShadow = true;
-    doorGroup.add(threshold);
+    frameGroup.add(threshold);
+
+    // 2. Door Hinge Pivot & Panel Assembly
+    const slabW = w - 2 * border;
+    const slabH = h - border;
+
+    if (isDouble) {
+      const leafW = slabW / 2;
+
+      // Left Leaf
+      const leftPivot = new THREE.Group();
+      leftPivot.name = 'DoorPivot_Left';
+      leftPivot.position.set(-w / 2 + border, 0, -0.02);
+      doorGroup.add(leftPivot);
+
+      const leftSlab = new THREE.Mesh(new THREE.BoxGeometry(leafW, slabH, 0.06), doorMat);
+      leftSlab.position.set(leafW / 2, -border / 2, 0);
+      leftSlab.castShadow = true;
+      leftPivot.add(leftSlab);
+
+      // Right Leaf
+      const rightPivot = new THREE.Group();
+      rightPivot.name = 'DoorPivot_Right';
+      rightPivot.position.set(w / 2 - border, 0, -0.02);
+      doorGroup.add(rightPivot);
+
+      const rightSlab = new THREE.Mesh(new THREE.BoxGeometry(leafW, slabH, 0.06), doorMat);
+      rightSlab.position.set(-leafW / 2, -border / 2, 0);
+      rightSlab.castShadow = true;
+      rightPivot.add(rightSlab);
+
+      doorGroup.leftPivot = leftPivot;
+      doorGroup.rightPivot = rightPivot;
+      doorGroup.isDouble = true;
+    } else {
+      // Single Leaf: Real physical hinge at left inner jamb
+      const doorPivot = new THREE.Group();
+      doorPivot.name = 'DoorPivot';
+      doorPivot.position.set(-w / 2 + border, 0, -0.02);
+      doorGroup.add(doorPivot);
+
+      const panelGroup = new THREE.Group();
+      panelGroup.name = 'DoorPanel';
+      doorPivot.add(panelGroup);
+
+      // Slab mesh offset so it rotates around the hinge edge
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(slabW, slabH, 0.06), doorMat);
+      slab.position.set(slabW / 2, -border / 2, 0);
+      slab.castShadow = true;
+      slab.receiveShadow = true;
+      panelGroup.add(slab);
+
+      if (hasGlass) {
+        const gW = slabW * 0.7;
+        const gH = slabH * 0.42;
+        const glass = new THREE.Mesh(new THREE.PlaneGeometry(gW, gH), materials.glassSkyReflect);
+        glass.position.set(slabW / 2, slabH * 0.22, 0.035);
+        panelGroup.add(glass);
+
+        const gFrame = new THREE.Mesh(new THREE.BoxGeometry(gW + 0.04, gH + 0.04, 0.04), frameMat);
+        gFrame.position.set(slabW / 2, slabH * 0.22, 0.03);
+        gFrame.castShadow = true;
+        panelGroup.add(gFrame);
+      }
+
+      // Brass Handle near opening edge
+      const handleGeo = new THREE.CylinderGeometry(0.016, 0.016, 0.16, 8);
+      const handle = new THREE.Mesh(handleGeo, materials.metalBrass);
+      handle.position.set(slabW - 0.09, -0.15, 0.05);
+      handle.castShadow = true;
+      panelGroup.add(handle);
+
+      doorGroup.doorPivot = doorPivot;
+      doorGroup.doorPanel = panelGroup;
+      doorGroup.isDouble = false;
+    }
+
+    // Door State & Delta-Time Animation Interface
+    doorGroup.doorState = 'CLOSED'; // 'CLOSED' | 'OPENING' | 'OPEN' | 'CLOSING'
+    doorGroup.openProgress = 0.0;
+    doorGroup.targetOpen = 0.0;
+    doorGroup.openSpeed = 2.2; // Smooth opening in ~0.5s
+    doorGroup.maxAngle = -Math.PI * 0.48; // Inward swing (~86 deg)
+
+    doorGroup.open = function() {
+      this.targetOpen = 1.0;
+      this.doorState = 'OPENING';
+    };
+
+    doorGroup.close = function() {
+      this.targetOpen = 0.0;
+      this.doorState = 'CLOSING';
+    };
+
+    doorGroup.update = function(delta) {
+      if (!delta || delta <= 0) return;
+      if (this.doorState === 'CLOSED' && this.targetOpen === 0) return;
+      if (this.doorState === 'OPEN' && this.targetOpen === 1.0) return;
+
+      if (this.targetOpen > this.openProgress) {
+        this.openProgress = Math.min(1.0, this.openProgress + this.openSpeed * delta);
+        if (this.openProgress >= 1.0) {
+          this.doorState = 'OPEN';
+        } else {
+          this.doorState = 'OPENING';
+        }
+      } else if (this.targetOpen < this.openProgress) {
+        this.openProgress = Math.max(0.0, this.openProgress - this.openSpeed * delta);
+        if (this.openProgress <= 0.0) {
+          this.doorState = 'CLOSED';
+        } else {
+          this.doorState = 'CLOSING';
+        }
+      }
+
+      // Smoothstep easing for realistic physical door swing
+      const t = this.openProgress;
+      const eased = t * t * (3 - 2 * t);
+
+      if (this.isDouble) {
+        if (this.leftPivot) this.leftPivot.rotation.y = eased * this.maxAngle;
+        if (this.rightPivot) this.rightPivot.rotation.y = -eased * this.maxAngle;
+      } else if (this.doorPivot) {
+        this.doorPivot.rotation.y = eased * this.maxAngle;
+      }
+    };
 
     return doorGroup;
   }
@@ -928,6 +1031,7 @@ export function createDioramaBuildings(materials) {
     q1Group.add(frontAwning);
 
     const mainDoor = createDoor(1.1, 2.1, { doorMat: materials.doorTeal, isDouble: false });
+    mainDoor.name = 'Door_Quad1_CatBuilding_South';
     mainDoor.position.set(0.75, 0.16 + 1.05, bD / 2 + 0.02);
     q1Group.add(mainDoor);
 
@@ -953,8 +1057,9 @@ export function createDioramaBuildings(materials) {
     sideWin.position.set(bW / 2 - wallThick / 2, 0.16 + 1.4, 0);
     q1Group.add(sideWin);
 
-    // Rear (-Z) Service Door & Left (-X) Window on Floor 1
+    // North (-Z) Front Door facing Gate1_N and Stone Garden Path
     const rearDoor1 = createDoor(1.0, 2.05, { doorMat: materials.doorTeal, isDouble: false });
+    rearDoor1.name = 'Door_Quad1_CatBuilding';
     rearDoor1.rotation.y = Math.PI;
     rearDoor1.position.set(0, 0.16 + 1.02, -bD / 2 - 0.02);
     q1Group.add(rearDoor1);
@@ -1204,6 +1309,7 @@ export function createDioramaBuildings(materials) {
 
     // Ground Floor Storefront Entrance & Displays
     const door2A = createDoor(1.15, 2.1, { doorMat: materials.doorTeal, isDouble: false });
+      door2A.name = 'Door_Quad2_CornerBuilding_Front';
     door2A.position.set(0.75, 0.16 + 1.05, b1D / 2 + 0.02);
     b2AGroup.add(door2A);
 
@@ -1217,6 +1323,7 @@ export function createDioramaBuildings(materials) {
 
     // Rear (-Z) Delivery Service Door on Floor 1
     const rearDoor2A = createDoor(1.05, 2.05, { doorMat: materials.doorTeal, isDouble: false });
+      rearDoor2A.name = 'Door_Quad2_CornerBuilding';
     rearDoor2A.rotation.y = Math.PI;
     rearDoor2A.position.set(0, 0.16 + 1.02, -b1D / 2 - 0.02);
     b2AGroup.add(rearDoor2A);
@@ -1341,8 +1448,8 @@ export function createDioramaBuildings(materials) {
       { x: 0.65, y: 1.05, w: 1.05, h: 2.1 },
     ];
     const f1Openings2B_Back = [
-      { x: 0.75, y: 1.35, w: 1.1, h: 1.4 },
-      { x: -0.5, y: 1.02, w: 0.95, h: 2.05 },
+      { x: 1.15, y: 1.35, w: 1.0, h: 1.4 },
+      { x: 0, y: 1.02, w: 1.05, h: 2.05 },
     ];
     const f1Openings2B_Left = [
       { x: 0, y: 1.35, w: 1.1, h: 1.4 },
@@ -1373,6 +1480,7 @@ export function createDioramaBuildings(materials) {
 
     // Ground Floor Entrance
     const door2B = createDoor(1.05, 2.1, { doorMat: materials.doorWood, isDouble: false });
+    door2B.name = 'Door_Quad2_PeachCottage';
     door2B.position.set(0.65, 0.16 + 1.05, b2D / 2 + 0.02);
     b2BGroup.add(door2B);
 
@@ -1384,19 +1492,20 @@ export function createDioramaBuildings(materials) {
     win2BGround.position.set(-0.75, 0.16 + 1.35, b2D / 2 - wallThick / 2);
     b2BGroup.add(win2BGround);
 
-    // Floor 1 Rear (-Z) Door & Window + Left (-X) Window
-    const rearDoor2B = createDoor(0.95, 2.05, { doorMat: materials.doorWood, isDouble: false });
+    // Floor 1 Rear (-Z) Door & Window + Left (-X) Window facing Garden Path
+    const rearDoor2B = createDoor(1.0, 2.05, { doorMat: materials.doorWood, isDouble: false });
+    rearDoor2B.name = 'Door_Quad2_PeachCottage_Garden';
     rearDoor2B.rotation.y = Math.PI;
-    rearDoor2B.position.set(0.5, 0.16 + 1.02, -b2D / 2 - 0.02);
+    rearDoor2B.position.set(0, 0.16 + 1.02, -b2D / 2 - 0.02);
     b2BGroup.add(rearDoor2B);
 
-    const rearWin2B = createRecessedWindow(1.1, 1.4, wallThick, {
+    const rearWin2B = createRecessedWindow(1.0, 1.4, wallThick, {
       type: 'A',
       glassMat: materials.glassSkyReflect,
       frameMat: materials.windowFrame,
     });
     rearWin2B.rotation.y = Math.PI;
-    rearWin2B.position.set(-0.75, 0.16 + 1.35, -b2D / 2 + wallThick / 2);
+    rearWin2B.position.set(-1.15, 0.16 + 1.35, -b2D / 2 + wallThick / 2);
     b2BGroup.add(rearWin2B);
 
     const leftWin2B = createRecessedWindow(1.1, 1.4, wallThick, {
@@ -2070,8 +2179,8 @@ export function createDioramaBuildings(materials) {
 
     // Floor 1 Perimeter Enclosure with Real Punched Openings
     const f1Openings4B_Front = [
-      { x: -0.75, y: 1.35, w: 1.2, h: 1.45 },
-      { x: 0.65, y: 1.02, w: 1.05, h: 2.05 },
+      { x: -1.15, y: 1.35, w: 1.0, h: 1.45 },
+      { x: 0, y: 1.02, w: 1.05, h: 2.05 },
     ];
     const f1Openings4B_Back = [
       { x: 0.75, y: 1.35, w: 1.1, h: 1.4 },
@@ -2098,21 +2207,22 @@ export function createDioramaBuildings(materials) {
     f1Walls4B.position.y = 0.16;
     b4BGroup.add(f1Walls4B);
 
-    // Ground Floor Entrance & Awning on Front (+Z)
+    // Ground Floor Entrance & Awning on Front (+Z) facing Garden Path
     const awning4B = createStripedAwning(3.4, 1.15, 0.45, materials.awningRed, materials.awningWhite, 7);
     awning4B.position.set(0, 0.16 + 2.3, b2D / 2 + 0.04);
     b4BGroup.add(awning4B);
 
     const door4B = createDoor(1.05, 2.05, { doorMat: materials.doorWood, isDouble: false });
-    door4B.position.set(0.65, 0.16 + 1.02, b2D / 2 + 0.02);
+    door4B.name = 'Door_Quad4_RooftopGardenBuilding';
+    door4B.position.set(0, 0.16 + 1.02, b2D / 2 + 0.02);
     b4BGroup.add(door4B);
 
-    const win4BGround = createRecessedWindow(1.2, 1.45, wallThick, {
+    const win4BGround = createRecessedWindow(1.0, 1.45, wallThick, {
       type: 'C',
       glassMat: materials.glassSkyReflect,
       frameMat: materials.windowFrame,
     });
-    win4BGround.position.set(-0.75, 0.16 + 1.35, b2D / 2 - wallThick / 2);
+    win4BGround.position.set(-1.15, 0.16 + 1.35, b2D / 2 - wallThick / 2);
     b4BGroup.add(win4BGround);
 
     // Floor 1 Rear (-Z) Door and Window + Side Windows

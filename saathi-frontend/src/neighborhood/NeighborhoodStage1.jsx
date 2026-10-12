@@ -18,6 +18,7 @@ export default function NeighborhoodStage1({ onBack }) {
     // Initialize self-contained Three.js scene
     const scene = new NeighborhoodScene(mountRef.current);
     sceneInstanceRef.current = scene;
+    scene.startStory();
 
     return () => {
       scene.dispose();
