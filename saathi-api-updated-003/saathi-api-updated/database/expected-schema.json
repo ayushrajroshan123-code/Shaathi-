@@ -1,5 +1,5 @@
 {
-  "_comment": "Generated from database/schema.sql + migrations/002_auth.sql + migrations/003_coordination.sql + migrations/004_phase2c_final_audit.sql. Used by scripts/verify-schema.js to confirm a live database matches the canonical artifacts. Regenerate by hand alongside any new migration — this file is not auto-derived from SQL.",
+  "_comment": "Generated from database/schema.sql + migrations 002 through 008. Used by scripts/verify-schema.js to confirm a live database matches the canonical artifacts. Regenerate by hand alongside any new migration — this file is not auto-derived from SQL.",
   "tables": {
     "hubs": {
       "columns": ["hub_id", "name", "type", "roster_source", "created_at", "emergency_mode"],
@@ -111,22 +111,27 @@
         "category", "description", "evidence", "status", "coordinator_id", "action_taken",
         "repeat_pattern_flag", "created_at", "resolved_at"
       ],
-      "indexes": ["idx_conduct_reports_reporter_target_time", "idx_conduct_reports_target_time", "idx_conduct_reports_status"],
+      "indexes": [
+        "idx_conduct_reports_reporter_target_time",
+        "idx_conduct_reports_target_time",
+        "idx_conduct_reports_status",
+        "idx_conduct_reports_unique_report"
+      ],
       "triggers": ["trg_conduct_repeat_pattern"]
     },
     "help_requests": {
       "columns": [
         "request_id", "incident_id", "requested_by", "need_type", "urgency", "location",
-        "status", "matched_helper_id", "created_at", "resolved_at"
+        "status", "matched_helper_id", "created_at", "resolved_at", "hub_id"
       ],
-      "indexes": ["idx_help_requests_incident"]
+      "indexes": ["idx_help_requests_incident", "idx_help_requests_hub_status"]
     },
     "incidents": {
       "columns": [
         "incident_id", "source", "priority_score", "priority_level", "status", "location",
-        "latitude", "longitude", "affected_people", "vulnerable_people", "created_at", "resolved_at"
+        "latitude", "longitude", "affected_people", "vulnerable_people", "created_at", "resolved_at", "hub_id"
       ],
-      "indexes": ["idx_incidents_status_priority"]
+      "indexes": ["idx_incidents_status_priority", "idx_incidents_hub_status_created"]
     },
     "incident_helpers": {
       "columns": ["incident_id", "user_id", "assigned_at"],
@@ -139,13 +144,13 @@
     "sos_events": {
       "columns": [
         "sos_id", "triggered_by", "incident_id", "location", "latitude", "longitude",
-        "battery_level", "timestamp", "accidental_protection_confirmed", "offline_stored"
+        "battery_level", "timestamp", "accidental_protection_confirmed", "offline_stored", "hub_id"
       ],
-      "indexes": ["idx_sos_events_incident"]
+      "indexes": ["idx_sos_events_incident", "idx_sos_events_hub_timestamp"]
     },
     "emergency_alerts": {
-      "columns": ["alert_id", "level", "source", "affected_area", "issued_at"],
-      "indexes": []
+      "columns": ["alert_id", "level", "source", "affected_area", "issued_at", "hub_id", "issuer_id"],
+      "indexes": ["idx_emergency_alerts_hub_issued", "idx_emergency_alerts_issuer_id"]
     },
     "notifications": {
       "columns": ["notification_id", "recipient_id", "type", "payload", "sent_at"],
@@ -169,7 +174,9 @@
     "mark_conduct_repeat_pattern",
     "enforce_resource_request_not_owner",
     "prevent_coordination_event_mutation",
-    "sync_resource_requests_requester"
+    "sync_resource_requests_requester",
+    "trg_enforce_emergency_mode_queries",
+    "trg_enforce_query_edit_lock"
   ],
   "extensions": ["pgcrypto"],
   "excluded_from_verification": {
