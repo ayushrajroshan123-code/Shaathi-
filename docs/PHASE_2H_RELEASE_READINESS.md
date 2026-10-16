@@ -118,17 +118,34 @@ To ensure zero risk of data leakage, corruption, or confusion between the public
 Follow these exact steps when deploying SAATHI for the first time:
 
 ### Step 1: Managed Database Provisioning
-1. Provision a managed PostgreSQL instance (e.g. AWS RDS, Neon, Supabase).
-2. Create the dedicated demo database and least-privileged user:
-   ```sql
-   CREATE DATABASE saathi_demo;
-   CREATE USER saathi_demo_user WITH PASSWORD '<STRONG_RANDOMLY_GENERATED_PASSWORD>';
-   ALTER ROLE saathi_demo_user NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
-   GRANT CONNECT ON DATABASE saathi_demo TO saathi_demo_user;
-   \c saathi_demo
-   GRANT ALL ON SCHEMA public TO saathi_demo_user;
-   ```
-3. Verify that `saathi_demo_user` cannot access any other databases.
+1. Provision a managed PostgreSQL instance (e.g. Neon, AWS RDS, Supabase).
+2. **Database and Role Identity Requirements:**
+   - Isolated demo database name: `saathi_demo` (strictly verified by `scripts/demo_guard.js` via `EXPECTED_DEMO_DB_NAME=saathi_demo` and live query `SELECT current_database()`).
+   - Dedicated demo login role: `saathi_demo_user` (strictly verified by `scripts/demo_guard.js` via `EXPECTED_DEMO_ROLE=saathi_demo_user` and live query `SELECT current_user`).
+   - The demo role must be least-privileged: `NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION`.
+3. **Privileges, Object Ownership, and Extension Constraints:**
+   - **Database vs. Schema Privileges:** In PostgreSQL (including Neon), database privileges (`CONNECT`, `CREATE`) and schema privileges (`USAGE`, `CREATE ON SCHEMA public`) are distinct. In PostgreSQL 15+, `CREATE` privilege on schema `public` is no longer granted by default; it must be explicitly granted to the migration role within `saathi_demo`.
+   - **Object Ownership for Migrations:** Migrations `001` through `008` create domain tables, functions, and triggers, followed by incremental `ALTER TABLE` and trigger additions. In PostgreSQL, a role must own a table to alter its structure or attach triggers. Running migrations as `saathi_demo_user` ensures that this role owns the created objects and can apply all subsequent migration scripts.
+   - **`pgcrypto` Extension:** Migration `001_baseline.sql` executes `CREATE EXTENSION IF NOT EXISTS pgcrypto;`. Installing an extension in PostgreSQL requires database-level `CREATE` privilege (for trusted extensions) or administrative/owner authority; `IF NOT EXISTS` skips creation only if the extension already exists on the database. If `saathi_demo_user` lacks extension creation privileges, `pgcrypto` must be installed administratively (e.g. via `neondb_owner`) before running migrations.
+4. **Provisioning Execution (Neon SQL Editor vs. `psql` CLI):**
+   - *Tooling distinction:* `\c saathi_demo` is a `psql` client meta-command and is **invalid SQL** in the Neon Web SQL Editor. In the Neon Console, switch database context using the database selector dropdown menu in the SQL Editor, or execute commands through separate database connections.
+   - **Administrative Setup (run in default/admin database context as `neondb_owner` or superuser):**
+     ```sql
+     CREATE DATABASE saathi_demo;
+     CREATE USER saathi_demo_user WITH PASSWORD '<STRONG_RANDOMLY_GENERATED_PASSWORD>';
+     ALTER ROLE saathi_demo_user NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
+     GRANT CONNECT ON DATABASE saathi_demo TO saathi_demo_user;
+     ```
+   - **Database-Scoped Setup (run directly within `saathi_demo` via console database selector or `psql -d saathi_demo`):**
+     ```sql
+     -- As admin (neondb_owner), install pgcrypto inside saathi_demo before running migrations:
+     CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+     -- Grant schema privileges required for migration table, function, and trigger creation:
+     GRANT USAGE, CREATE ON SCHEMA public TO saathi_demo_user;
+
+     ```
+5. Verify that `saathi_demo_user` cannot access any other databases (e.g. default `neondb` or production `saathi`).
 
 ### Step 2: Database Migration
 1. From an administrative terminal or deployment task, run the idempotent migration runner against `saathi_demo`:
