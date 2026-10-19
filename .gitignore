@@ -1,4 +1,4 @@
-﻿# Node modules
+# Node modules
 node_modules/
 */node_modules/
 */*/node_modules/
@@ -33,3 +33,15 @@ Thumbs.db
 .cache/
 temp/
 tmp/
+
+# Scratch and local investigation reports
+scratch/
+**/scratch/
+
+# Local draft documentation
+/API_CONTRACT002.md
+
+# Local test runners and verification scripts
+/saathi-frontend/verify_mobile_browser.js
+/saathi-frontend/verify_phase1_flow.js
+/saathi-frontend/verify_xy_malicious_scenario.js
