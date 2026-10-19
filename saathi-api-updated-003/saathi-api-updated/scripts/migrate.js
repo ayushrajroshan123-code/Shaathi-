@@ -33,7 +33,9 @@ const MIGRATIONS_DIR = path.join(__dirname, '..', 'database', 'migrations');
 const DRY_RUN = process.argv.includes('--dry-run');
 
 function checksum(content) {
-  return crypto.createHash('sha256').update(content).digest('hex');
+  // Normalize CRLF to LF so migration checksums are deterministic across platforms
+  const normalized = content.replace(/\r\n/g, '\n');
+  return crypto.createHash('sha256').update(normalized).digest('hex');
 }
 
 function loadMigrationFiles() {
