@@ -1,6 +1,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { ApiError } = require('../lib/errors');
+const { loginRateLimiter, signupRateLimiter } = require('../middleware/rate_limit');
 const {
   hashPassword,
   verifyPassword,
@@ -37,7 +38,7 @@ function dbErrorToApiError(err) {
 // POST /auth/signup — { hub_id, name, email, password }
 // New accounts always start as role='resident', account_status=
 // 'pending_approval' — see PATCH /users/:id/approve|reject.
-publicRouter.post('/signup', async (req, res, next) => {
+publicRouter.post('/signup', signupRateLimiter, async (req, res, next) => {
   try {
     const { hub_id: hubId, name, email, password } = req.body;
     if (!hubId || !name || !email || !password) {
@@ -63,7 +64,7 @@ publicRouter.post('/signup', async (req, res, next) => {
 });
 
 // POST /auth/login — { email, password }
-publicRouter.post('/login', async (req, res, next) => {
+publicRouter.post('/login', loginRateLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
