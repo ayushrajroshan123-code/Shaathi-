@@ -44,7 +44,7 @@ async function createSession(userId) {
 async function loadActorFromToken(token) {
   const { rows } = await query(
     `SELECT s.session_id, s.expires_at, s.revoked_at,
-            u.user_id, u.role, u.is_active, u.account_status
+            u.user_id, u.role, u.hub_id, u.is_active, u.account_status
      FROM sessions s
      JOIN users u ON u.user_id = s.user_id
      WHERE s.token_hash = $1`,
@@ -54,7 +54,7 @@ async function loadActorFromToken(token) {
   if (!row) return null;
   if (row.revoked_at || new Date(row.expires_at) < new Date()) return null;
   if (!row.is_active || row.account_status !== 'active') return null;
-  return { user_id: row.user_id, role: row.role, session_id: row.session_id };
+  return { user_id: row.user_id, role: row.role, hub_id: row.hub_id, session_id: row.session_id };
 }
 
 async function revokeSession(sessionId) {

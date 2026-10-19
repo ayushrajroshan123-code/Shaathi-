@@ -12,6 +12,19 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
  * - Subtle road detail (manhole covers)
  */
 
+
+export const ROAD_LAYOUT = {
+  platformSize: 38.0,
+  halfSize: 19.0,
+  roadWidth: 6.6,
+  halfRoad: 3.3,
+  laneCenterOffset: 1.65, // halfRoad / 2
+  crosswalkCenter: 4.8,
+  zebraCrossingHalfWidth: 1.4, // width 2.8 / 2
+  stopLineOffset: 6.4, // 4.8 + 1.6
+  boundary: 19.0
+};
+
 export function createDioramaRoads(materials) {
   const group = new THREE.Group();
   group.name = 'DioramaRoads';

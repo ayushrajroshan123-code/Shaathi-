@@ -1,162 +1,40 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { NeighborhoodScene } from '../neighborhood/NeighborhoodScene';
 
+const STORIES = [
+  {
+    id: 'drill',
+    title: 'Borrow a drill',
+    subtitle: 'Find something nearby',
+  },
+  {
+    id: 'carry',
+    title: 'Help carry something',
+    subtitle: 'Lend a hand nearby',
+  },
+  {
+    id: 'ladder',
+    title: 'Borrow a ladder',
+    subtitle: 'Coordinate a quick handoff',
+  },
+];
+
 /**
- * LandingNeighborhood — cinematic 3D neighborhood section for the landing page.
+ * LandingNeighborhood — Cinematic 3D neighborhood section for the SAATHI landing page.
  *
- * Single job: make the abstract idea of neighborhood coordination physically real.
- * Story: Martha Gable (Lot 5) has a wheelchair → Dr. Thorne (Lot 2) is responding.
- *
- * Architecture:
- *   - Reuses NeighborhoodScene directly (no second renderer, no new packages)
- *   - Lazy-inits via IntersectionObserver; disposes on exit
- *   - Cards are HTML overlays positioned once at scene-ready
- *   - Dashboard untouched — NeighborhoodScene.js unmodified
+ * Phase 1 Architecture:
+ * - Editorial Showcase Header ("See Saathi in action") with 3 quiet story selectors.
+ * - Single-story execution managed by ScenarioDirector.
+ * - Quiet story beat caption outside the canvas without in-canvas speech bubbles.
  */
 export default function LandingNeighborhood() {
   const sectionRef = useRef(null);
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
-  const cardARef = useRef(null);
-  const cardBRef = useRef(null);
-  const arcRef = useRef(null);
-  const resetTimeoutRef = useRef(null);
-  const beatTimerRef = useRef(null);
-  const beatCycleRef = useRef(null);
-  const isOrbitingRef = useRef(false);
-  const cardsVisibleRef = useRef(false);
   const observerRef = useRef(null);
 
-  // ------------------------------------------------------------------
-  // Wheelchair coordination scenario (from dashboardData.js)
-  // Lot 5 · Martha Gable · res-9 · Drive Medical Lightweight Folding Wheelchair
-  // Lot 2 · Dr. Aris Thorne
-  // ------------------------------------------------------------------
-  const LOT5_POS = { x: 9.0, y: 5.2, z: -9.0 };
-  const LOT2_POS = { x: -8.8, y: 5.2, z: 8.8 };
-
-  // ------------------------------------------------------------------
-  // Position cards at computed screen coords (once at scene-ready)
-  // ------------------------------------------------------------------
-  const anchorCards = useCallback(() => {
-    const scene = sceneRef.current;
-    const mount = mountRef.current;
-    if (!scene || !mount) return;
-    if (typeof scene.getScreenCoordinates !== 'function') return;
-
-    const coordA = scene.getScreenCoordinates(LOT5_POS.x, LOT5_POS.y, LOT5_POS.z);
-    const coordB = scene.getScreenCoordinates(LOT2_POS.x, LOT2_POS.y, LOT2_POS.z);
-
-    if (!coordA || !coordB) return;
-
-    const w = mount.clientWidth;
-    const h = mount.clientHeight;
-
-    const MARGIN_X = 130;
-    const MARGIN_Y = 80;
-    const clampX = (x) => Math.max(MARGIN_X, Math.min(w - MARGIN_X, x));
-    const clampY = (y) => Math.max(MARGIN_Y, Math.min(h - MARGIN_Y, y));
-
-    const ax = clampX(coordA.x);
-    const ay = clampY(coordA.y);
-    const bx = clampX(coordB.x);
-    const by = clampY(coordB.y);
-
-    if (cardARef.current) {
-      cardARef.current.style.left = ax + 'px';
-      cardARef.current.style.top = ay + 'px';
-    }
-    if (cardBRef.current) {
-      cardBRef.current.style.left = bx + 'px';
-      cardBRef.current.style.top = by + 'px';
-    }
-
-    // Draw SVG arc
-    const svg = arcRef.current;
-    if (svg) {
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      svg.style.width = w + 'px';
-      svg.style.height = h + 'px';
-
-      const line = svg.querySelector('.ln-arc-line');
-      if (line) {
-        const mx = (ax + bx) / 2;
-        const my = Math.min(ay, by) - 48;
-        line.setAttribute('d', 'M ' + ax + ' ' + ay + ' Q ' + mx + ' ' + my + ' ' + bx + ' ' + by);
-        try {
-          const length = line.getTotalLength();
-          line.style.strokeDasharray = length;
-          line.style.strokeDashoffset = length;
-        } catch (_) {
-          line.style.strokeDasharray = '300';
-          line.style.strokeDashoffset = '300';
-        }
-      }
-    }
-  }, []);
-
-  // ------------------------------------------------------------------
-  // Show / hide coordination overlay
-  // ------------------------------------------------------------------
-  const showOverlay = useCallback(() => {
-    if (isOrbitingRef.current) return;
-    cardsVisibleRef.current = true;
-    if (cardARef.current) cardARef.current.classList.add('ln-card--visible');
-    if (cardBRef.current) cardBRef.current.classList.add('ln-card--visible');
-
-    const svg = arcRef.current;
-    if (svg) {
-      svg.classList.add('ln-arc--visible');
-      const line = svg.querySelector('.ln-arc-line');
-      if (line) {
-        let length = line._cachedLength || 300;
-        try {
-          if (!line._cachedLength) {
-            length = line.getTotalLength();
-            line._cachedLength = length;
-          }
-        } catch (_) {}
-        line.style.transition = 'none';
-        line.style.strokeDashoffset = String(length);
-        requestAnimationFrame(() => {
-          if (!cardsVisibleRef.current) return;
-          line.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
-          line.style.strokeDashoffset = '0';
-        });
-      }
-    }
-  }, []);
-
-  const hideOverlay = useCallback(() => {
-    cardsVisibleRef.current = false;
-    if (cardARef.current) cardARef.current.classList.remove('ln-card--visible');
-    if (cardBRef.current) cardBRef.current.classList.remove('ln-card--visible');
-    if (arcRef.current) arcRef.current.classList.remove('ln-arc--visible');
-  }, []);
-
-  // ------------------------------------------------------------------
-  // Beat cycle: 5s pure → 4s story → 2s rest → loop
-  // ------------------------------------------------------------------
-  const stopBeatCycle = useCallback(() => {
-    if (beatTimerRef.current) { clearTimeout(beatTimerRef.current); beatTimerRef.current = null; }
-    if (beatCycleRef.current) { clearTimeout(beatCycleRef.current); beatCycleRef.current = null; }
-  }, []);
-
-  const startBeatCycle = useCallback(() => {
-    stopBeatCycle();
-
-    const runCycle = () => {
-      beatTimerRef.current = setTimeout(() => {
-        showOverlay();
-        beatTimerRef.current = setTimeout(() => {
-          hideOverlay();
-          beatCycleRef.current = setTimeout(runCycle, 2000);
-        }, 4000);
-      }, 5000);
-    };
-
-    runCycle();
-  }, [stopBeatCycle, showOverlay, hideOverlay]);
+  const [activeStory, setActiveStory] = useState(null);
+  const [currentBeat, setCurrentBeat] = useState('');
 
   // ------------------------------------------------------------------
   // Initialize the scene
@@ -172,123 +50,100 @@ export default function LandingNeighborhood() {
         if (sectionRef.current) sectionRef.current.classList.add('ln-section--no-webgl');
         return;
       }
-    } catch (_) { return; }
+    } catch (_) {
+      return;
+    }
 
     const scene = new NeighborhoodScene(mountRef.current);
     sceneRef.current = scene;
 
-    // Landing-specific configuration (NeighborhoodScene.js remains completely untouched)
-    scene.controls.enablePan = false;
-    scene.controls.autoRotate = true;
-    scene.controls.autoRotateSpeed = 0.4;
+    // Connect beat updates from ScenarioDirector
+    scene.onBeat = (beatText) => {
+      setCurrentBeat(beatText);
+    };
 
-    // 1. Landing-only shadow map caching:
-    // The diorama geometry and studio sunlight are static; freezing autoUpdate
-    // renders the shadow map once and reuses it, eliminating ~1,500 redundant draw calls per frame
-    if (scene.renderer.shadowMap.enabled) {
-      scene.renderer.shadowMap.autoUpdate = false;
-      scene.renderer.shadowMap.needsUpdate = true;
-    }
+    // Connect active story state from ScenarioDirector (single source of truth)
+    scene.onStoryChange = (storyId) => {
+      setActiveStory(storyId);
+    };
 
-    // 2. Landing-only DPR cap:
-    // Cap to 1.5 on desktop, 1.2 on mobile to avoid 4x shading overhead on high-DPI displays
+    // Camera stays stable: NO auto-rotation, user has full free inspection
+    scene.controls.enablePan = true;
+    scene.controls.autoRotate = false;
+
+    // Responsive DPR and Shadow Rendering
     const isMobile = mountRef.current.clientWidth < 768;
     if (isMobile) {
       scene.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
       scene.renderer.shadowMap.enabled = false;
     } else {
       scene.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      if (scene.renderer.shadowMap.enabled) {
+        scene.renderer.shadowMap.autoUpdate = true;
+      }
     }
 
-    // Settle 150ms before anchoring cards
-    beatTimerRef.current = setTimeout(() => {
-      anchorCards();
-      startBeatCycle();
-    }, 150);
-  }, [anchorCards, startBeatCycle]);
+    // In Phase 1, stories do NOT auto-start on initialization.
+    // The neighborhood remains in its natural ambient state until a story is chosen.
+  }, []);
 
   // ------------------------------------------------------------------
-  // Landing-specific pause / resume (zero changes to NeighborhoodScene.js)
+  // Story selection handler (delegates strictly to ScenarioDirector)
+  // ------------------------------------------------------------------
+  const handleSelectStory = useCallback((storyId) => {
+    if (storyId === 'ladder') {
+      console.log('[StoryUI] Ladder button clicked');
+    }
+    const nextStory = activeStory === storyId ? null : storyId;
+    setActiveStory(nextStory);
+    if (nextStory === 'ladder') {
+      console.log('[StoryUI] Active story: ladder');
+    }
+
+    if (!sceneRef.current) {
+      initScene();
+    }
+    if (sceneRef.current) {
+      sceneRef.current.toggleScenario(storyId);
+    }
+  }, [activeStory, initScene]);
+
+  // ------------------------------------------------------------------
+  // Pause / Resume lifecycle (scroll-driven efficiency)
   // ------------------------------------------------------------------
   const pauseLandingScene = useCallback(() => {
     const scene = sceneRef.current;
-    if (scene && scene.animationFrameId) {
-      cancelAnimationFrame(scene.animationFrameId);
-      scene.animationFrameId = null;
+    if (scene) {
+      if (scene.animationFrameId) {
+        cancelAnimationFrame(scene.animationFrameId);
+        scene.animationFrameId = null;
+      }
+      scene.pauseStory();
     }
-    stopBeatCycle();
-    hideOverlay();
-  }, [stopBeatCycle, hideOverlay]);
+  }, []);
 
   const resumeLandingScene = useCallback(() => {
     const scene = sceneRef.current;
-    if (scene && !scene.animationFrameId && !scene.isDisposed) {
-      scene.animate();
-      startBeatCycle();
+    if (scene && !scene.isDisposed) {
+      if (!scene.animationFrameId) {
+        scene.animate();
+      }
+      scene.resumeStory();
     }
-  }, [startBeatCycle]);
+  }, []);
 
   // ------------------------------------------------------------------
   // Dispose scene
   // ------------------------------------------------------------------
   const disposeScene = useCallback(() => {
-    stopBeatCycle();
-    hideOverlay();
-    if (resetTimeoutRef.current) { clearTimeout(resetTimeoutRef.current); resetTimeoutRef.current = null; }
     if (sceneRef.current) {
       sceneRef.current.dispose();
       sceneRef.current = null;
     }
-  }, [stopBeatCycle, hideOverlay]);
+  }, []);
 
   // ------------------------------------------------------------------
-  // Orbit interaction handlers
-  // ------------------------------------------------------------------
-  const handlePointerDown = useCallback(() => {
-    isOrbitingRef.current = true;
-    cardsVisibleRef.current = false;
-    if (cardARef.current) cardARef.current.classList.remove('ln-card--visible');
-    if (cardBRef.current) cardBRef.current.classList.remove('ln-card--visible');
-    if (arcRef.current) arcRef.current.classList.remove('ln-arc--visible');
-    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
-    stopBeatCycle();
-  }, [stopBeatCycle]);
-
-  const handlePointerUp = useCallback(() => {
-    isOrbitingRef.current = false;
-    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
-    // After 4s inactivity → smooth camera reset
-    resetTimeoutRef.current = setTimeout(() => {
-      if (sceneRef.current) {
-        sceneRef.current.resetCamera();
-        // Re-enable auto-orbit (resetCamera internally sets autoRotate=false)
-        // and re-anchor cards after the 850ms reset animation settles
-        setTimeout(() => {
-          if (sceneRef.current && sceneRef.current.controls) {
-            sceneRef.current.controls.autoRotate = true;
-            sceneRef.current.controls.autoRotateSpeed = 0.4;
-          }
-          anchorCards();
-          startBeatCycle();
-        }, 1000);
-      }
-    }, 4000);
-
-  }, [anchorCards, startBeatCycle]);
-
-  // ------------------------------------------------------------------
-  // Window resize handler
-  // ------------------------------------------------------------------
-  useEffect(() => {
-    const handleResize = () => {
-      anchorCards();
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [anchorCards]);
-
-  // ------------------------------------------------------------------
-  // IntersectionObserver lifecycle
+  // IntersectionObserver lifecycle: initializes ONLY when section is reached
   // ------------------------------------------------------------------
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -300,26 +155,24 @@ export default function LandingNeighborhood() {
     const section = sectionRef.current;
     if (!section) return;
 
-    // Lifecycle: initialize once when approaching viewport (rootMargin: 300px);
-    // pause rendering when sufficiently offscreen, resume when visible.
-    // WebGL resources are only disposed when the component truly unmounts.
+    // Observe when the user actually scrolls to this section
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) {
+          if (e.isIntersecting && e.intersectionRatio >= 0.15) {
             if (!sceneRef.current) {
               initScene();
             } else {
               resumeLandingScene();
             }
-          } else {
+          } else if (!e.isIntersecting || e.intersectionRatio < 0.05) {
             if (sceneRef.current) {
               pauseLandingScene();
             }
           }
         });
       },
-      { rootMargin: '300px 0px' }
+      { threshold: [0, 0.15, 0.3] }
     );
     observerRef.current.observe(section);
 
@@ -333,22 +186,6 @@ export default function LandingNeighborhood() {
   }, [initScene, disposeScene, resumeLandingScene, pauseLandingScene]);
 
   // ------------------------------------------------------------------
-  // Pointer event listeners
-  // ------------------------------------------------------------------
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
-    mount.addEventListener('pointerdown', handlePointerDown);
-    mount.addEventListener('pointerup', handlePointerUp);
-    mount.addEventListener('pointerleave', handlePointerUp);
-    return () => {
-      mount.removeEventListener('pointerdown', handlePointerDown);
-      mount.removeEventListener('pointerup', handlePointerUp);
-      mount.removeEventListener('pointerleave', handlePointerUp);
-    };
-  }, [handlePointerDown, handlePointerUp]);
-
-  // ------------------------------------------------------------------
   // Render
   // ------------------------------------------------------------------
   return (
@@ -358,62 +195,62 @@ export default function LandingNeighborhood() {
       id="neighborhood-scene"
       aria-label="SAATHI Neighborhood — Greenwood Commons coordination"
     >
-      <div className="ln-sticky-wrap">
-        {/* Section eyebrow — light editorial label above the canvas */}
-        <div className="ln-eyebrow" aria-hidden="true">
-          <span className="ln-eyebrow-text">GREENWOOD COMMONS</span>
-          <span className="ln-eyebrow-sep">·</span>
-          <span className="ln-eyebrow-sub">Oakridge Circle</span>
-        </div>
+      {/* 1. Story Showcase Controls Block — Completely OUTSIDE the 3D viewport */}
+      <div className="ln-showcase-bar">
+        <div className="ln-showcase-content">
+          <h2 className="ln-showcase-title">See SAATHI working</h2>
 
-        {/* Three.js canvas mount — fills the section */}
+          <div className="ln-story-selectors" role="tablist" aria-label="Neighborhood Stories">
+            {STORIES.map((story) => {
+              const isActive = activeStory === story.id;
+              return (
+                <button
+                  key={story.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={`ln-story-pill ${isActive ? 'ln-story-pill--active' : ''}`}
+                  onClick={() => handleSelectStory(story.id)}
+                >
+                  <div className="ln-story-pill-body">
+                    <span className="ln-story-pill-title">{story.title}</span>
+                    <span className="ln-story-pill-subtitle">{story.subtitle}</span>
+                  </div>
+                  <div className="ln-story-pill-peg" aria-hidden="true">
+                    <span className="ln-story-peg-core" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Small, quiet story beat caption outside 3D viewport */}
+          <div className="ln-beat-container" aria-live="polite">
+            {currentBeat ? (
+              <p className="ln-beat-caption">{currentBeat}</p>
+            ) : (
+              <p className="ln-beat-caption ln-beat-caption--muted">
+                Select a story above to observe neighborhood coordination
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 2. 3D Viewport — Dedicated canvas container sitting cleanly below controls */}
+      <div className="ln-viewport-wrap">
         <div ref={mountRef} className="ln-canvas-mount" aria-hidden="true" />
-
-        {/* Reduced-motion / no-WebGL fallback placeholder */}
-        <div className="ln-placeholder" aria-hidden="true">
-          <span className="ln-placeholder-eyebrow">GREENWOOD COMMONS</span>
-          <span className="ln-placeholder-statement">One neighborhood.<br />People coordinate here.</span>
-        </div>
-
-        {/* Editorial card A — Lot 5, Martha Gable */}
-        <div
-          ref={cardARef}
-          className="ln-card ln-card-a"
-          role="presentation"
-          aria-hidden="true"
-        >
-          <span className="ln-card-label">WHEELCHAIR · LOT 5</span>
-          <span className="ln-card-value">Available now</span>
-        </div>
-
-        {/* Editorial card B — Lot 2, Dr. Thorne */}
-        <div
-          ref={cardBRef}
-          className="ln-card ln-card-b"
-          role="presentation"
-          aria-hidden="true"
-        >
-          <span className="ln-card-label">DR. THORNE · LOT 2</span>
-          <span className="ln-card-value">Responding</span>
-        </div>
-
-        {/* SVG connection arc */}
-        <svg
-          ref={arcRef}
-          className="ln-arc-svg"
-          aria-hidden="true"
-        >
-          <path
-            className="ln-arc-line"
-            fill="none"
-            stroke="rgba(42,111,99,0.28)"
-            strokeWidth="1"
-            strokeLinecap="round"
-          />
-        </svg>
-
-        {/* Bottom gradient bridge — transitions into TwoModes dark background (#0A0C10) */}
         <div className="ln-bottom-fade" aria-hidden="true" />
+      </div>
+
+      {/* Reduced-motion / no-WebGL fallback placeholder */}
+      <div className="ln-placeholder" aria-hidden="true">
+        <span className="ln-placeholder-eyebrow">GREENWOOD COMMONS</span>
+        <span className="ln-placeholder-statement">
+          One neighborhood.
+          <br />
+          People coordinate here.
+        </span>
       </div>
     </section>
   );

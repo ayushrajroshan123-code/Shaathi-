@@ -278,7 +278,8 @@ export function createDioramaProps(materials) {
     lamp.add(arm);
 
     const globeGeo = new THREE.SphereGeometry(0.22, 14, 12);
-    const globe = new THREE.Mesh(globeGeo, materials.lampGlow);
+    const globe = new THREE.Mesh(globeGeo, materials.lampGlow.clone());
+    globe.name = 'LampGlobe';
     globe.position.set(0.38, 3.12, 0);
     lamp.add(globe);
 
@@ -401,6 +402,7 @@ export function createDioramaProps(materials) {
 
     // Street Lamp near corner crosswalk
     const lamp1 = createStreetLamp();
+    lamp1.name = 'TrafficLamp_SE';
     lamp1.position.set(4.2, 0.16, 5.2);
     lamp1.rotation.y = Math.PI / 4;
     group.add(lamp1);
@@ -468,6 +470,7 @@ export function createDioramaProps(materials) {
 
     // Street Lamp near corner crosswalk
     const lamp2 = createStreetLamp();
+    lamp2.name = 'TrafficLamp_SW';
     lamp2.position.set(-4.2, 0.16, 5.6);
     lamp2.rotation.y = -Math.PI / 4;
     group.add(lamp2);
@@ -555,6 +558,7 @@ export function createDioramaProps(materials) {
 
     // Two black decorative street lamps flanking Market frontage
     const lamp3A = createStreetLamp();
+    lamp3A.name = 'TrafficLamp_NW';
     lamp3A.position.set(-6.4, 0.16, -4.2);
     lamp3A.rotation.y = -Math.PI / 4;
     group.add(lamp3A);
@@ -606,6 +610,7 @@ export function createDioramaProps(materials) {
 
     // Street Lamp on East Sidewalk
     const lamp4 = createStreetLamp();
+    lamp4.name = 'TrafficLamp_NE';
     lamp4.position.set(5.8, 0.16, -4.2);
     lamp4.rotation.y = Math.PI / 2;
     group.add(lamp4);

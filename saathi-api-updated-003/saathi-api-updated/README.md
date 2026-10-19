@@ -155,3 +155,108 @@ These are exactly the items flagged in the schema review. The code implements th
 - Coverage completion requires access-handoff confirmation when required (trigger `enforce_coverage_completion`)
 - Conduct repeat-pattern flag, >=3 reports/30 days (trigger `mark_conduct_repeat_pattern`)
 - The 10-reports/24h submission cap is service-layer only per the schema's own comment — implemented in `src/services/conduct.js`.
+
+## Environment Configuration and CORS
+
+### Applications and Environment Templates
+- **Backend API:** `saathi-api-updated-003/saathi-api-updated/.env.example`  
+  Copy to `.env` in the backend root. Contains server port, PostgreSQL connection, TLS settings, pool limits, and CORS origins.
+- **Frontend SPA:** `saathi-frontend/.env.example`  
+  Copy to `.env` or `.env.local` for local development, or `.env.production` for production builds. Contains the public API base URL.
+
+### Local Development Setup (Do Not Commit `.env`)
+Both `.env` files are ignored by git. Never commit real credentials, passwords, or local `.env` files to version control:
+```bash
+# Backend setup
+cd saathi-api-updated-003/saathi-api-updated
+cp .env.example .env
+# Edit .env with your local database URL: postgres://postgres:password@localhost:5432/saathi
+
+# Frontend setup
+cd ../../saathi-frontend
+cp .env.example .env
+# Defaults to http://localhost:3000 for local development
+```
+
+### Configuring `ALLOWED_ORIGINS` for CORS
+The backend matches CORS origins exactly. Wildcards (`*` or wildcard domains) are strictly rejected.
+- In **development**, if `ALLOWED_ORIGINS` is unset, the API defaults to standard local Vite frontend origins (`http://localhost:5173,http://127.0.0.1:5173`).
+- In **production**, `ALLOWED_ORIGINS` is mandatory and fail-closed: provide a comma-separated list of exact HTTP/HTTPS origins without trailing slashes, pathnames, or wildcards.
+  Example:
+  ```env
+  ALLOWED_ORIGINS=https://saathi.community,https://app.saathi.community
+  ```
+- Requests without an `Origin` header (e.g., server-to-server calls, CLI tools, health checks) are accepted by policy.
+
+### Public Nature of `VITE_API_BASE_URL`
+All `VITE_*` environment variables in `saathi-frontend` are statically bundled into compiled client JavaScript assets and delivered to user browsers.
+- `VITE_API_BASE_URL` is **public configuration**, not a secret.
+- **Never place database passwords, auth secrets, or private keys in frontend `.env` files.**
+
+### Mandatory Variables Before Production Startup
+- **Backend Startup:**
+  - `NODE_ENV=production`
+  - `DATABASE_URL` (valid PostgreSQL connection string)
+  - `ALLOWED_ORIGINS` (exact origin of production frontend; startup fails closed if missing or invalid)
+  - `DATABASE_SSL=require` (or `true` if connecting to managed PostgreSQL)
+- **Frontend Build (`npm run build`):**
+  - `VITE_API_BASE_URL` (e.g. `https://api.saathi.community`; build fails fast if missing or invalid)
+
+## Dedicated Demo Environment & Safety Boundary
+
+### Architecture and Isolation Boundary
+The SAATHI public portfolio demo runs against an isolated, dedicated database named `saathi_demo`, completely detached from development (`saathi`), testing (`saathi_test`), and future production environments.
+
+> **CRITICAL WARNING:**
+> Never execute demo seed or reset scripts against development, test, or production databases.
+> The reset operation transactionally truncates operational tables to restore a clean fictional baseline.
+> Guard tooling enforces a strict fail-closed boundary and immediately aborts if any safety invariant is not satisfied.
+
+### Required Environment Variables for Demo Tooling
+To authorize demo seed or reset operations, all of the following environment variables must be explicitly supplied:
+```env
+DEMO_MODE=true
+ALLOW_DEMO_RESET=true
+EXPECTED_DEMO_DB_NAME=saathi_demo
+DATABASE_URL=postgres://saathi_demo_user:<password>@localhost:5432/saathi_demo
+# Optional dedicated role verification
+EXPECTED_DEMO_ROLE=saathi_demo_user
+# Optional demo password override (default: DemoSecret123!)
+DEMO_USER_PASSWORD=DemoSecret123!
+```
+
+### Exact Refusal Conditions (Fail-Closed)
+`scripts/demo_guard.js` evaluates every safety guard before issuing any data mutation or deletion:
+1. `DEMO_MODE !== 'true'`: Refuses execution.
+2. `ALLOW_DEMO_RESET !== 'true'`: Refuses execution.
+3. `EXPECTED_DEMO_DB_NAME !== 'saathi_demo'`: Refuses execution.
+4. `DATABASE_URL` is missing, empty, or whitespace: Refuses execution.
+5. `DATABASE_URL` contains production identifiers (`prod`, `production`): Refuses execution.
+6. `DATABASE_URL` path targets protected non-demo databases (`/saathi`, `/saathi_test`, `/postgres`, `/template1`): Refuses execution.
+7. Live query `SELECT current_database()` does not return exactly `saathi_demo`: Refuses execution.
+8. Live database identity matches protected non-demo databases (`saathi`, `saathi_test`): Refuses execution.
+9. Connected role `SELECT current_user` does not match `EXPECTED_DEMO_ROLE` (when configured): Refuses execution.
+10. Any contradictory, missing, or malformed configuration: Refuses execution.
+
+### Manual Seed and Reset Commands
+```bash
+# Seed the dedicated demo database (idempotent):
+DEMO_MODE=true ALLOW_DEMO_RESET=true EXPECTED_DEMO_DB_NAME=saathi_demo DATABASE_URL=postgres://saathi_demo_user:<password>@localhost:5432/saathi_demo npm run demo:seed
+
+# Reset and restore the baseline demo dataset (transactional truncate + re-seed):
+DEMO_MODE=true ALLOW_DEMO_RESET=true EXPECTED_DEMO_DB_NAME=saathi_demo DATABASE_URL=postgres://saathi_demo_user:<password>@localhost:5432/saathi_demo npm run demo:reset
+
+# Run isolated demo boundary automated safety tests:
+npm run test:demo
+```
+
+### Fictional Demo Personas & Limitations
+All personas, contact details, resources, and coordination entries are strictly fictional and exist solely for demonstration:
+- **Coordinator:** Kavita Sharma (`coordinator@saathi.local`)
+- **Resident 1:** Alice Xu (`alice.demo@saathi.local`)
+- **Resident 2:** Bob Yang (`bob.demo@saathi.local`)
+- **Resident 3:** Sarah Chen (`sarah.demo@saathi.local`)
+- Passwords are securely hashed with salted `scrypt`. Plaintext passwords are never stored.
+- Emergency routes and tables (`incidents`, `sos_events`, `emergency_alerts`) are never seeded and remain inactive.
+- Never use demo credentials or demo authorization against real user data.
+

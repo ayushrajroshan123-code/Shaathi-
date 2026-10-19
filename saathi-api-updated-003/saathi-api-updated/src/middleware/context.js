@@ -15,14 +15,14 @@ async function loadActor(req, res, next) {
   const authHeader = req.header('authorization') || '';
   const [scheme, token] = authHeader.split(' ');
   if (scheme !== 'Bearer' || !token) {
-    return res.status(401).json({ error: 'UNAUTHENTICATED', message: 'Authorization: Bearer <token> header required' });
+    return res.status(401).json({ error: 'UNAUTHENTICATED', message: 'Authorization: Bearer <token> header required', status: 401 });
   }
   try {
     const actor = await loadActorFromToken(token);
     if (!actor) {
-      return res.status(401).json({ error: 'UNAUTHENTICATED', message: 'invalid, expired, or revoked session' });
+      return res.status(401).json({ error: 'UNAUTHENTICATED', message: 'invalid, expired, or revoked session', status: 401 });
     }
-    req.actor = { user_id: actor.user_id, role: actor.role };
+    req.actor = { user_id: actor.user_id, role: actor.role, hub_id: actor.hub_id };
     req.session_id = actor.session_id;
     next();
   } catch (err) {
@@ -33,7 +33,7 @@ async function loadActor(req, res, next) {
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.actor || !roles.includes(req.actor.role)) {
-      return res.status(403).json({ error: 'FORBIDDEN', message: `requires role: ${roles.join(' or ')}` });
+      return res.status(403).json({ error: 'FORBIDDEN', message: `requires role: ${roles.join(' or ')}`, status: 403 });
     }
     next();
   };
@@ -49,6 +49,7 @@ function errorHandler(err, req, res, _next) {
   res.status(status).json({
     error: err.code || 'INTERNAL_ERROR',
     message: status === 500 ? 'internal error' : err.message,
+    status,
   });
 }
 
@@ -64,6 +65,18 @@ function dbErrorToApiError(err) {
   if (err.code === '23514' || err.code === '23505' || err.code === '23503') {
     // check_violation / unique_violation / foreign_key_violation
     return new ApiError(422, 'CONSTRAINT_VIOLATION', err.message);
+  }
+  if (err.code === '22P02' || err.code === '22007' || err.code === '22008') {
+    // invalid input syntax (e.g. invalid UUID syntax or malformed timestamp)
+    return new ApiError(400, 'VALIDATION_ERROR', 'invalid identifier or data format');
+  }
+  if (err.code === 'P0001') {
+    if (err.message && err.message.includes('EMERGENCY_MODE_ACTIVE')) {
+      return new ApiError(409, 'EMERGENCY_MODE_ACTIVE', 'action blocked during emergency mode');
+    }
+    if (err.message && err.message.includes('QUERY_LOCKED')) {
+      return new ApiError(409, 'QUERY_LOCKED', 'cannot edit query after an answer has been submitted');
+    }
   }
   return err;
 }

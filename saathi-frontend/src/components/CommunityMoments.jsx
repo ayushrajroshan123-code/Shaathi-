@@ -32,116 +32,116 @@ export default function CommunityMoments() {
   });
 
   // =========================================================================
-  // MOMENT 01: WHEELCHAIR RESOURCE (0.015 - 0.175)
-  // Entrance: 0.015 - 0.030 | Need Hold: 0.030 - 0.060 | Resp Entrance: 0.060 - 0.075
-  // Combined Hold: 0.075 - 0.145 (7.0% hold) | Exit: 0.145 - 0.160
-  // Quiet Interval: 0.160 - 0.175 (1.5% breathing space)
+  // MOMENT 01: WHEELCHAIR RESOURCE (0.010 - 0.170)
+  // Entrance: 0.010 - 0.025 | Need Hold: 0.025 - 0.045 | Resp Entrance: 0.045 - 0.060
+  // Combined Hold: 0.060 - 0.115 (5.5% hold) | Exit: 0.115 - 0.130
+  // Quiet Interval: 0.130 - 0.170 (4.0% larger breathing space)
   // =========================================================================
-  const m1LayerOpacity = useTransform(scrollYProgress, [0.015, 0.030, 0.145, 0.160], [0, 1, 1, 0]);
+  const m1LayerOpacity = useTransform(scrollYProgress, [0.010, 0.025, 0.115, 0.130], [0, 1, 1, 0]);
   const m1Visibility = useTransform(m1LayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const m1PointerEvents = useTransform(m1LayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const m1NeedOpacity = useTransform(scrollYProgress, [0.015, 0.030, 0.145, 0.160], [0, 1, 1, 0]);
-  const m1NeedY = useTransform(scrollYProgress, [0.015, 0.030, 0.145, 0.160], [20, 0, 0, -16]);
-  const m1RespOpacity = useTransform(scrollYProgress, [0.060, 0.075, 0.145, 0.160], [0, 1, 1, 0]);
-  const m1RespY = useTransform(scrollYProgress, [0.060, 0.075, 0.145, 0.160], [16, 0, 0, -16]);
-  const m1RespX = useTransform(scrollYProgress, [0.060, 0.075, 0.145, 0.160], [-8, 0, 0, 0]);
-  const m1LineProgress = useTransform(scrollYProgress, [0.060, 0.085], [0, 1]);
+  const m1NeedOpacity = useTransform(scrollYProgress, [0.010, 0.025, 0.115, 0.130], [0, 1, 1, 0]);
+  const m1NeedY = useTransform(scrollYProgress, [0.010, 0.025, 0.115, 0.130], [20, 0, 0, -16]);
+  const m1RespOpacity = useTransform(scrollYProgress, [0.045, 0.060, 0.115, 0.130], [0, 1, 1, 0]);
+  const m1RespY = useTransform(scrollYProgress, [0.045, 0.060, 0.115, 0.130], [16, 0, 0, -16]);
+  const m1RespX = useTransform(scrollYProgress, [0.045, 0.060, 0.115, 0.130], [-8, 0, 0, 0]);
+  const m1LineProgress = useTransform(scrollYProgress, [0.045, 0.070], [0, 1]);
 
   // =========================================================================
-  // MOMENT 02: MEDICINE NEARBY (0.175 - 0.335)
-  // Entrance: 0.175 - 0.190 | Need Hold: 0.190 - 0.220 | Resp Entrance: 0.220 - 0.235
-  // Combined Hold: 0.235 - 0.305 (7.0% hold) | Exit: 0.305 - 0.320
-  // Quiet Interval: 0.320 - 0.335 (1.5% breathing space)
+  // MOMENT 02: MEDICINE NEARBY (0.170 - 0.320)
+  // Entrance: 0.170 - 0.185 | Need Hold: 0.185 - 0.205 | Resp Entrance: 0.205 - 0.220
+  // Combined Hold: 0.220 - 0.275 (5.5% hold) | Exit: 0.275 - 0.290
+  // Quiet Interval: 0.290 - 0.320 (3.0% clear breathing space)
   // =========================================================================
-  const m2LayerOpacity = useTransform(scrollYProgress, [0.175, 0.190, 0.305, 0.320], [0, 1, 1, 0]);
+  const m2LayerOpacity = useTransform(scrollYProgress, [0.170, 0.185, 0.275, 0.290], [0, 1, 1, 0]);
   const m2Visibility = useTransform(m2LayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const m2PointerEvents = useTransform(m2LayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const m2NeedOpacity = useTransform(scrollYProgress, [0.175, 0.190, 0.305, 0.320], [0, 1, 1, 0]);
-  const m2NeedY = useTransform(scrollYProgress, [0.175, 0.190, 0.305, 0.320], [20, 0, 0, -16]);
-  const m2NeedX = useTransform(scrollYProgress, [0.175, 0.190, 0.305, 0.320], [-12, 0, 0, 0]);
-  const m2RespOpacity = useTransform(scrollYProgress, [0.220, 0.235, 0.305, 0.320], [0, 1, 1, 0]);
-  const m2RespY = useTransform(scrollYProgress, [0.220, 0.235, 0.305, 0.320], [16, 0, 0, -16]);
-  const m2RespX = useTransform(scrollYProgress, [0.220, 0.235, 0.305, 0.320], [12, 0, 0, 0]);
+  const m2NeedOpacity = useTransform(scrollYProgress, [0.170, 0.185, 0.275, 0.290], [0, 1, 1, 0]);
+  const m2NeedY = useTransform(scrollYProgress, [0.170, 0.185, 0.275, 0.290], [20, 0, 0, -16]);
+  const m2NeedX = useTransform(scrollYProgress, [0.170, 0.185, 0.275, 0.290], [-12, 0, 0, 0]);
+  const m2RespOpacity = useTransform(scrollYProgress, [0.205, 0.220, 0.275, 0.290], [0, 1, 1, 0]);
+  const m2RespY = useTransform(scrollYProgress, [0.205, 0.220, 0.275, 0.290], [16, 0, 0, -16]);
+  const m2RespX = useTransform(scrollYProgress, [0.205, 0.220, 0.275, 0.290], [12, 0, 0, 0]);
 
   // =========================================================================
-  // MOMENT 03: AC SERVICING MULTIPLIER (0.335 - 0.495)
-  // Entrance: 0.335 - 0.350 | Need Hold: 0.350 - 0.380 | Resp Entrance: 0.380 - 0.395
-  // Combined Hold: 0.395 - 0.465 (7.0% hold) | Exit: 0.465 - 0.480
-  // Quiet Interval: 0.480 - 0.495 (1.5% breathing space)
+  // MOMENT 03: AC SERVICING MULTIPLIER (0.320 - 0.470)
+  // Entrance: 0.320 - 0.335 | Need Hold: 0.335 - 0.355 | Resp Entrance: 0.355 - 0.370
+  // Combined Hold: 0.370 - 0.425 (5.5% hold) | Exit: 0.425 - 0.440
+  // Quiet Interval: 0.440 - 0.470 (3.0% clear breathing space)
   // =========================================================================
-  const m3LayerOpacity = useTransform(scrollYProgress, [0.335, 0.350, 0.465, 0.480], [0, 1, 1, 0]);
+  const m3LayerOpacity = useTransform(scrollYProgress, [0.320, 0.335, 0.425, 0.440], [0, 1, 1, 0]);
   const m3Visibility = useTransform(m3LayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const m3PointerEvents = useTransform(m3LayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const m3NeedOpacity = useTransform(scrollYProgress, [0.335, 0.350, 0.465, 0.480], [0, 1, 1, 0]);
-  const m3NeedY = useTransform(scrollYProgress, [0.335, 0.350, 0.465, 0.480], [20, 0, 0, -16]);
-  const m3RespOpacity = useTransform(scrollYProgress, [0.380, 0.395, 0.465, 0.480], [0, 1, 1, 0]);
-  const m3RespScale = useTransform(scrollYProgress, [0.380, 0.395, 0.465, 0.480], [0.96, 1, 1, 0.98]);
-  const m3RespY = useTransform(scrollYProgress, [0.380, 0.395, 0.465, 0.480], [16, 0, 0, -16]);
+  const m3NeedOpacity = useTransform(scrollYProgress, [0.320, 0.335, 0.425, 0.440], [0, 1, 1, 0]);
+  const m3NeedY = useTransform(scrollYProgress, [0.320, 0.335, 0.425, 0.440], [20, 0, 0, -16]);
+  const m3RespOpacity = useTransform(scrollYProgress, [0.355, 0.370, 0.425, 0.440], [0, 1, 1, 0]);
+  const m3RespScale = useTransform(scrollYProgress, [0.355, 0.370, 0.425, 0.440], [0.96, 1, 1, 0.98]);
+  const m3RespY = useTransform(scrollYProgress, [0.355, 0.370, 0.425, 0.440], [16, 0, 0, -16]);
 
   // =========================================================================
-  // MOMENT 04: FLOOD ROUTE INFORMATION (0.495 - 0.680)
-  // Entrance: 0.495 - 0.510 | Need Hold: 0.510 - 0.545 (3.5% hold)
-  // Resp Entrance: 0.545 - 0.560
-  // ✨ PRESERVED EXTENDED HOLD: 0.560 - 0.650 (9.0% steady plateau for "Use Gate 4 instead")
-  // Exit: 0.650 - 0.665
-  // Quiet Interval: 0.665 - 0.680 (1.5% breathing space)
+  // MOMENT 04: FLOOD ROUTE INFORMATION (0.470 - 0.670)
+  // Entrance: 0.470 - 0.485 | Need Hold: 0.485 - 0.505
+  // Resp Entrance: 0.505 - 0.520
+  // - PRESERVED EXTENDED HOLD: 0.520 - 0.615 (9.5% steady plateau for "Use Gate 4 instead")
+  // Exit: 0.615 - 0.630
+  // Quiet Interval: 0.630 - 0.670 (4.0% larger breathing space)
   // =========================================================================
-  const m4LayerOpacity = useTransform(scrollYProgress, [0.495, 0.510, 0.650, 0.665], [0, 1, 1, 0]);
+  const m4LayerOpacity = useTransform(scrollYProgress, [0.470, 0.485, 0.615, 0.630], [0, 1, 1, 0]);
   const m4Visibility = useTransform(m4LayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const m4PointerEvents = useTransform(m4LayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const m4NeedOpacity = useTransform(scrollYProgress, [0.495, 0.510, 0.650, 0.665], [0, 1, 1, 0]);
-  const m4NeedY = useTransform(scrollYProgress, [0.495, 0.510, 0.650, 0.665], [20, 0, 0, -16]);
-  const m4RespOpacity = useTransform(scrollYProgress, [0.545, 0.560, 0.650, 0.665], [0, 1, 1, 0]);
-  const m4RespY = useTransform(scrollYProgress, [0.545, 0.560, 0.650, 0.665], [16, 0, 0, -16]);
-  const m4RespX = useTransform(scrollYProgress, [0.545, 0.560, 0.650, 0.665], [12, 0, 0, 0]);
+  const m4NeedOpacity = useTransform(scrollYProgress, [0.470, 0.485, 0.615, 0.630], [0, 1, 1, 0]);
+  const m4NeedY = useTransform(scrollYProgress, [0.470, 0.485, 0.615, 0.630], [20, 0, 0, -16]);
+  const m4RespOpacity = useTransform(scrollYProgress, [0.505, 0.520, 0.615, 0.630], [0, 1, 1, 0]);
+  const m4RespY = useTransform(scrollYProgress, [0.505, 0.520, 0.615, 0.630], [16, 0, 0, -16]);
+  const m4RespX = useTransform(scrollYProgress, [0.505, 0.520, 0.615, 0.630], [12, 0, 0, 0]);
 
   // =========================================================================
-  // BEAT 6: ACCUMULATION & CONNECTION (0.680 - 0.775)
-  // Entrance: 0.680 - 0.695 | Hold: 0.695 - 0.745 (5.0% hold) | Exit: 0.745 - 0.760
-  // Quiet Interval: 0.760 - 0.775 (1.5% breathing space)
+  // BEAT 6: ACCUMULATION & CONNECTION (0.670 - 0.770)
+  // Entrance: 0.670 - 0.685 | Hold: 0.685 - 0.725 (4.0% hold) | Exit: 0.725 - 0.740
+  // Quiet Interval: 0.740 - 0.770 (3.0% clear breathing space)
   // =========================================================================
-  const accumLayerOpacity = useTransform(scrollYProgress, [0.680, 0.695, 0.745, 0.760], [0, 1, 1, 0]);
+  const accumLayerOpacity = useTransform(scrollYProgress, [0.670, 0.685, 0.725, 0.740], [0, 1, 1, 0]);
   const accumVisibility = useTransform(accumLayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const accumPointerEvents = useTransform(accumLayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const accumScale = useTransform(scrollYProgress, [0.680, 0.695, 0.745, 0.760], [0.97, 1, 1, 1.01]);
-  const accumLineProgress = useTransform(scrollYProgress, [0.685, 0.715], [0, 1]);
+  const accumScale = useTransform(scrollYProgress, [0.670, 0.685, 0.725, 0.740], [0.97, 1, 1, 1.01]);
+  const accumLineProgress = useTransform(scrollYProgress, [0.675, 0.705], [0, 1]);
 
   // =========================================================================
-  // BEAT 8: THE REALIZATION (0.775 - 0.910)
-  // Entrance 1: 0.775 - 0.790 | Entrance 2: 0.790 - 0.805
-  // Hold: 0.805 - 0.875 (7.0% deliberate hold for "Different moments. One neighborhood.")
-  // Exit: 0.875 - 0.890
-  // ✨ MAJOR NARRATIVE QUIET INTERVAL: 0.890 - 0.910 (2.0% quiet pause before payoff)
+  // BEAT 8: THE REALIZATION (0.770 - 0.925)
+  // Entrance 1: 0.770 - 0.785 | Entrance 2: 0.785 - 0.800
+  // Hold: 0.800 - 0.850 (5.0% deliberate hold for "Different moments. One neighborhood.")
+  // Exit: 0.850 - 0.865
+  // - MAJOR NARRATIVE QUIET INTERVAL: 0.865 - 0.925 (6.0% largest cinematic breathing space before payoff)
   // =========================================================================
-  const realLayerOpacity = useTransform(scrollYProgress, [0.775, 0.805, 0.875, 0.890], [0, 1, 1, 0]);
+  const realLayerOpacity = useTransform(scrollYProgress, [0.770, 0.800, 0.850, 0.865], [0, 1, 1, 0]);
   const realVisibility = useTransform(realLayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const realPointerEvents = useTransform(realLayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const real1Opacity = useTransform(scrollYProgress, [0.775, 0.790, 0.875, 0.890], [0, 1, 1, 0]);
-  const real1Y = useTransform(scrollYProgress, [0.775, 0.790, 0.875, 0.890], [16, 0, 0, -16]);
-  const real2Opacity = useTransform(scrollYProgress, [0.790, 0.805, 0.875, 0.890], [0, 1, 1, 0]);
-  const real2Y = useTransform(scrollYProgress, [0.790, 0.805, 0.875, 0.890], [20, 0, 0, -16]);
+  const real1Opacity = useTransform(scrollYProgress, [0.770, 0.785, 0.850, 0.865], [0, 1, 1, 0]);
+  const real1Y = useTransform(scrollYProgress, [0.770, 0.785, 0.850, 0.865], [16, 0, 0, -16]);
+  const real2Opacity = useTransform(scrollYProgress, [0.785, 0.800, 0.850, 0.865], [0, 1, 1, 0]);
+  const real2Y = useTransform(scrollYProgress, [0.785, 0.800, 0.850, 0.865], [20, 0, 0, -16]);
 
   // =========================================================================
-  // BEAT 9: FINAL PAYOFF — COORDINATE (0.910 - 1.000)
-  // Deliberate entrance: 0.910 - 0.925 | Subtitle: 0.918 - 0.930
-  // Climactic Settled Hold: 0.925 - 1.000
+  // BEAT 9: FINAL PAYOFF - COORDINATE (0.925 - 1.000)
+  // Deliberate entrance: 0.925 - 0.940 | Subtitle: 0.933 - 0.945
+  // Climactic Settled Hold: 0.940 - 1.000
   // =========================================================================
-  const coordLayerOpacity = useTransform(scrollYProgress, [0.910, 0.925, 1.000], [0, 1, 1]);
+  const coordLayerOpacity = useTransform(scrollYProgress, [0.925, 0.940, 1.000], [0, 1, 1]);
   const coordVisibility = useTransform(coordLayerOpacity, (o) => (o > 0.001 ? 'visible' : 'hidden'));
   const coordPointerEvents = useTransform(coordLayerOpacity, (o) => (o > 0.001 ? 'auto' : 'none'));
 
-  const coordOpacity = useTransform(scrollYProgress, [0.910, 0.925, 1.000], [0, 1, 1]);
-  const coordY = useTransform(scrollYProgress, [0.910, 0.925, 1.000], [20, 0, 0]);
-  const coordScale = useTransform(scrollYProgress, [0.910, 0.925, 1.000], [0.98, 1, 1]);
-  const coordLetterSpacing = useTransform(scrollYProgress, [0.910, 0.925, 1.000], ['0.24em', '0.18em', '0.18em']);
-  const coordSubOpacity = useTransform(scrollYProgress, [0.918, 0.930, 1.000], [0, 0.85, 0.85]);
-  const coordSubY = useTransform(scrollYProgress, [0.918, 0.930, 1.000], [12, 0, 0]);
+  const coordOpacity = useTransform(scrollYProgress, [0.925, 0.940, 1.000], [0, 1, 1]);
+  const coordY = useTransform(scrollYProgress, [0.925, 0.940, 1.000], [20, 0, 0]);
+  const coordScale = useTransform(scrollYProgress, [0.925, 0.940, 1.000], [0.98, 1, 1]);
+  const coordLetterSpacing = useTransform(scrollYProgress, [0.925, 0.940, 1.000], ['0.24em', '0.18em', '0.18em']);
+  const coordSubOpacity = useTransform(scrollYProgress, [0.933, 0.945, 1.000], [0, 0.85, 0.85]);
+  const coordSubY = useTransform(scrollYProgress, [0.933, 0.945, 1.000], [12, 0, 0]);
 
   return (
     <section

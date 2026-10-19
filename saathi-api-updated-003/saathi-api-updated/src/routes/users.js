@@ -3,6 +3,8 @@ const { query } = require('../db');
 const { requireRole, ApiError, dbErrorToApiError } = require('../middleware/context');
 const { assertCanViewEligibility, isEligible } = require('../services/eligibility');
 const { hashPassword } = require('../services/auth');
+const { blockUser, listBlockedUsers } = require('../services/blocking');
+const { canViewUser } = require('../services/authorization');
 
 const router = express.Router();
 
@@ -37,7 +39,9 @@ router.post('/', requireRole('coordinator'), async (req, res, next) => {
         email || null, password ? hashPassword(password) : null,
       ]
     );
-    res.status(201).json(rows[0]);
+    const createdUser = rows[0];
+    delete createdUser.password_hash;
+    res.status(201).json(createdUser);
   } catch (err) {
     next(dbErrorToApiError(err));
   }
@@ -96,19 +100,51 @@ router.patch('/:userId/reject', requireRole('coordinator'), async (req, res, nex
   }
 });
 
-// Self or coordinator get the full row. Any other authenticated actor only
-// gets the minimal public fields needed to identify a counterpart in a
-// coverage/resource request — never contact_preferences,
-// notification_endpoints, or emergency_contact_user_id.
+// POST /users/block — Member blocks another user
+router.post('/block', async (req, res, next) => {
+  try {
+    const targetUserId = req.body.target_user_id || req.body.blocked_user_id;
+    const result = await blockUser({
+      blockerId: req.actor.user_id,
+      blockedUserId: targetUserId,
+      hubId: req.actor.hub_id,
+    });
+    res.status(201).json(result);
+  } catch (err) {
+    next(dbErrorToApiError(err));
+  }
+});
+
+// GET /users/blocked — Retrieves list of users blocked by caller
+router.get('/blocked', async (req, res, next) => {
+  try {
+    const blockedList = await listBlockedUsers({ blockerId: req.actor.user_id });
+    res.json(blockedList);
+  } catch (err) {
+    next(dbErrorToApiError(err));
+  }
+});
+
+// GET /users/:userId — Privacy-hardened user lookup.
+// Prohibits directory probing: caller must be self, coordinator, or an authorized counterpart
+// in an active coordination or open request within the same hub.
 router.get('/:userId', async (req, res, next) => {
   try {
+    const isAuthorized = await canViewUser(req.actor, req.params.userId);
+    if (!isAuthorized) {
+      throw new ApiError(404, 'NOT_FOUND', 'user not found');
+    }
+
     const { rows } = await query('SELECT * FROM users WHERE user_id = $1', [req.params.userId]);
     if (rows.length === 0) throw new ApiError(404, 'NOT_FOUND', 'user not found');
     const user = rows[0];
+
     const isSelfOrCoordinator = req.actor.user_id === user.user_id || req.actor.role === 'coordinator';
     if (isSelfOrCoordinator) {
+      delete user.password_hash;
       return res.json(user);
     }
+    // Minimal counterpart fields only
     res.json({ user_id: user.user_id, name: user.name, role: user.role });
   } catch (err) {
     next(dbErrorToApiError(err));

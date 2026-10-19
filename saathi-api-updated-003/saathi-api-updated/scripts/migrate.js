@@ -27,6 +27,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { Pool } = require('pg');
+const { getPoolConfig } = require('../src/db');
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', 'database', 'migrations');
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -68,12 +69,18 @@ async function getAppliedMigrations(client) {
 }
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL is not set (check .env).');
+  let poolConfig;
+  try {
+    poolConfig = getPoolConfig();
+  } catch (err) {
+    console.error(`Database configuration error: ${err.message}`);
     process.exit(1);
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool(poolConfig);
+  pool.on('error', (err) => {
+    console.error('[migrate] Unexpected error on idle PostgreSQL client:', err?.message || err);
+  });
   const client = await pool.connect();
 
   try {

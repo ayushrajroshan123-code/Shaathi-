@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   BatteryCharging,
   HelpingHand,
+  ShieldAlert,
 } from 'lucide-react';
 import { NeighborhoodScene } from '../neighborhood/NeighborhoodScene';
 import LayerControl from './LayerControl';
@@ -28,15 +29,20 @@ import {
  * 
  * Features:
  * - Color-coded markers by issue/coverage status (amber for issues, green/teal for available)
- * - Progressive disclosure: rich hover tooltip with lot owner, archetype, active status & shared tools
+ * - Progressive disclosure: rich hover tooltip with lot owner, archetype, active status & verified proximity
  * - Clear 3D Map Legend explaining markers
  * - Descriptive "+ ASK NEIGHBORHOOD" button with clear context
  */
 export default function NeighborhoodViewport({
   mode = 'normal',
+  liveIncidents = [],
   activeLayer = null,
   onSelectLayer,
   selectedItem,
+  selectedLotId = null,
+  highlightedLotIds = [],
+  onSelectLot,
+  onClearSelection,
   onSelectItem,
   onOpenAskModal,
 }) {
@@ -46,6 +52,26 @@ export default function NeighborhoodViewport({
   const [isAutoTouring, setIsAutoTouring] = useState(false);
   const [hoveredMarkerId, setHoveredMarkerId] = useState(null);
 
+  // Safe coarse lot-to-diorama anchor projection (never uses GPS coordinates)
+  const mapIncidentLocationToPos3D = useCallback((locationStr) => {
+    if (!locationStr || typeof locationStr !== 'string') {
+      return { x: 0.0, y: 3.5, z: 0.0 };
+    }
+    const match = locationStr.match(/(?:lot|house|residence)\s*([1-6])\b/i);
+    if (match) {
+      const lotId = parseInt(match[1], 10);
+      const lot = RESIDENTIAL_LOTS.find((l) => l.id === lotId);
+      if (lot && lot.position3D) {
+        return {
+          x: lot.position3D.x,
+          y: (lot.position3D.y || 1.5) + 1.8,
+          z: lot.position3D.z,
+        };
+      }
+    }
+    return { x: 0.0, y: 3.5, z: 0.0 };
+  }, []);
+
   // Compute 2D screen positions for 3D world points
   const updateProjectedMarkers = useCallback(() => {
     if (!sceneRef.current || !mountRef.current) return;
@@ -53,31 +79,72 @@ export default function NeighborhoodViewport({
 
     let itemsToProject = [];
 
+    // 1. Server-authoritative live incidents (presentation-layer only, zero GPS coordinates)
+    if (Array.isArray(liveIncidents) && liveIncidents.length > 0) {
+      liveIncidents.forEach((inc) => {
+        const incId = inc.incident_id || inc.id || 'inc';
+        itemsToProject.push({
+          id: `live-inc-${incId}`,
+          type: 'live_incident',
+          title: `[LIVE ALERT] Incident #${String(incId).slice(0, 8)} (${inc.priority_level || 'CRITICAL'})`,
+          shape: 'circle',
+          color: '#E5483A',
+          icon: <ShieldAlert size={13} />,
+          pos3D: mapIncidentLocationToPos3D(inc.location),
+          isLive: true,
+          data: {
+            type: 'live_incident',
+            incident_id: incId,
+            status: inc.status,
+            priority_level: inc.priority_level,
+            priority_score: inc.priority_score,
+            source: inc.source,
+            location: inc.location,
+            affected_people: inc.affected_people,
+            vulnerable_people: inc.vulnerable_people,
+            created_at: inc.created_at,
+            isLive: true,
+          },
+        });
+      });
+    }
+
     if (mode === 'emergency') {
-      // Emergency Mode Markers (Section 23: SHAPE + COLOR)
-      // 1. SOS (Lot 5)
+      // Local Simulation Mode Markers (Explicitly badged as simulation)
+      // 1. SOS (Lot 5 - Demonstration Scenario)
       itemsToProject.push({
         id: 'em-sos-1',
-        type: 'sos',
-        title: 'Martha Gable (Concentrator)',
+        type: 'simulated_incident',
+        title: '[SIMULATED] Martha Gable (Demo)',
         shape: 'circle',
         color: '#E5483A',
         icon: <AlertCircle size={13} />,
         pos3D: { x: 9.0, y: 4.8, z: -9.0 },
-        data: EMERGENCY_INCIDENT.affectedPeople[0],
+        isSimulated: true,
+        data: {
+          type: 'simulated_incident',
+          ...EMERGENCY_INCIDENT.affectedPeople[0],
+          isSimulated: true,
+          title: 'Martha Gable (Concentrator)',
+        },
       });
 
       // 2. Responders
       EMERGENCY_INCIDENT.responders.forEach((resp) => {
         itemsToProject.push({
           id: `em-resp-${resp.id}`,
-          type: 'responder',
-          title: `${resp.name} (${resp.role})`,
+          type: 'simulated_incident',
+          title: `[SIMULATED] ${resp.name} (${resp.role})`,
           shape: 'pin',
           color: '#24B47E',
           icon: <Check size={13} />,
           pos3D: resp.position3D,
-          data: resp,
+          isSimulated: true,
+          data: {
+            type: 'simulated_incident',
+            ...resp,
+            isSimulated: true,
+          },
         });
       });
 
@@ -85,13 +152,18 @@ export default function NeighborhoodViewport({
       EMERGENCY_INCIDENT.emergencyResources.forEach((res) => {
         itemsToProject.push({
           id: `em-res-${res.id}`,
-          type: 'emergency-resource',
-          title: res.name,
+          type: 'simulated_incident',
+          title: `[SIMULATED] ${res.name}`,
           shape: 'square',
           color: '#3189D8',
           icon: <BatteryCharging size={13} />,
           pos3D: res.position3D,
-          data: res,
+          isSimulated: true,
+          data: {
+            type: 'simulated_incident',
+            ...res,
+            isSimulated: true,
+          },
         });
       });
 
@@ -99,13 +171,18 @@ export default function NeighborhoodViewport({
       EMERGENCY_INCIDENT.warnings.forEach((warn) => {
         itemsToProject.push({
           id: `em-warn-${warn.id}`,
-          type: 'warning',
-          title: warn.title,
+          type: 'simulated_incident',
+          title: `[SIMULATED] ${warn.title}`,
           shape: 'triangle',
           color: '#E6A928',
           icon: <TriangleAlert size={13} />,
           pos3D: warn.position3D,
-          data: warn,
+          isSimulated: true,
+          data: {
+            type: 'simulated_incident',
+            ...warn,
+            isSimulated: true,
+          },
         });
       });
     } else {
@@ -128,7 +205,6 @@ export default function NeighborhoodViewport({
             issueSeverity: lotIssue?.severity || null,
             issueTitle: lotIssue?.title || null,
             coverageItems: lot.coverageItems || [],
-            resourceCount: lot.resources?.length || 0,
             statusClass: lotIssue
               ? (lotIssue.severity === 'medium' ? 'status-attention' : 'status-maintenance')
               : 'status-ready',
@@ -137,21 +213,16 @@ export default function NeighborhoodViewport({
       }
 
       if (activeLayer === 'resources') {
-        RESIDENTIAL_LOTS.forEach((lot) => {
-          lot.resources.forEach((res) => {
-            itemsToProject.push({
-              id: `lot-res-${res.id}`,
-              lotId: lot.id,
-              type: 'resource',
-              title: res.name,
-              subtitle: `Lot ${lot.id} · ${res.sharedBy}`,
-              lotNum: lot.id,
-              pos3D: { x: lot.position3D.x + (res.id.endsWith('1') ? 1.4 : -1.4), y: lot.position3D.y - 1.2, z: lot.position3D.z },
-              data: res,
-              parentLot: lot,
-              statusClass: 'status-resource',
-            });
-          });
+        // Privacy-First: Single generic neighborhood coordination point at common exchange courtyard (Lot 1 cafe base)
+        // Never places individual resource pins on private residential rooftops!
+        itemsToProject.push({
+          id: 'community-exchange-hub',
+          type: 'resource_hub',
+          title: 'COMMUNITY EXCHANGE',
+          subtitle: '11 shared resources nearby',
+          pos3D: { x: 11.8, y: 5.5, z: 11.6 },
+          data: { type: 'discovery', category: 'resources' },
+          statusClass: 'status-resource',
         });
       }
 
@@ -186,7 +257,7 @@ export default function NeighborhoodViewport({
     });
 
     setMarkerPositions(projected);
-  }, [mode, activeLayer]);
+  }, [mode, activeLayer, liveIncidents, mapIncidentLocationToPos3D]);
 
   // Initialize Three.js scene once
   useEffect(() => {
@@ -200,6 +271,19 @@ export default function NeighborhoodViewport({
       updateProjectedMarkers();
     };
 
+    // Connect lot selection and empty scene click
+    scene.onSelectLot = (lotId) => {
+      if (onSelectLot) {
+        onSelectLot(lotId);
+      }
+    };
+
+    scene.onSelectEmptyScene = () => {
+      if (onClearSelection) {
+        onClearSelection();
+      }
+    };
+
     // Initial projection
     const timer = setTimeout(() => {
       updateProjectedMarkers();
@@ -210,7 +294,7 @@ export default function NeighborhoodViewport({
       scene.dispose();
       sceneRef.current = null;
     };
-  }, [updateProjectedMarkers]);
+  }, [updateProjectedMarkers, onSelectLot, onClearSelection]);
 
   // Update scene mode (Normal vs Emergency) with ~1.5s visual transition
   useEffect(() => {
@@ -220,27 +304,26 @@ export default function NeighborhoodViewport({
     }
   }, [mode, updateProjectedMarkers]);
 
-  // Re-project spatial markers whenever active layer changes (Overview / Coverage / Resources / Issues)
+  // Update 3D scene lot highlight rings based on Pulse filter & selected lot
+  useEffect(() => {
+    if (sceneRef.current) {
+      sceneRef.current.setLotHighlights(highlightedLotIds, selectedLotId);
+    }
+  }, [highlightedLotIds, selectedLotId]);
+
+  // Re-project spatial markers whenever active layer or live incidents change
   useEffect(() => {
     updateProjectedMarkers();
-  }, [activeLayer, updateProjectedMarkers]);
+  }, [activeLayer, liveIncidents, updateProjectedMarkers]);
 
-  // Focus 3D camera when an item with a lot or position is selected
-  useEffect(() => {
-    if (!sceneRef.current || !selectedItem) return;
-
-    if (selectedItem.lotId) {
-      sceneRef.current.focusOnLot(selectedItem.lotId);
-    } else if (selectedItem.id && selectedItem.position3D) {
-      sceneRef.current.focusOnLot(selectedItem.id);
-    }
-  }, [selectedItem]);
+  // NOTE: Camera is STRICTLY LOCKED during lot selection / Pulse filtering (Parts 13, 82, 110)
+  // focusOnLot is NOT called on selection!
 
   const handleResetCamera = () => {
     if (sceneRef.current) {
       sceneRef.current.resetCamera();
       setIsAutoTouring(false);
-      if (onSelectItem) onSelectItem(null);
+      if (onClearSelection) onClearSelection();
     }
   };
 
@@ -292,7 +375,8 @@ export default function NeighborhoodViewport({
       <div className="saathi-3d-overlay-layer" aria-hidden="false">
         {markerPositions.map((marker) => {
           if (!marker.visible) return null;
-          const isSelected = selectedItem && (selectedItem.id === marker.id || (selectedItem.lotId && selectedItem.lotId === marker.lotId));
+          const isSelected = selectedLotId === marker.lotNum || (selectedItem && (selectedItem.id === marker.id || (selectedItem.lotId && selectedItem.lotId === marker.lotNum)));
+          const isHighlighted = Array.isArray(highlightedLotIds) && highlightedLotIds.includes(marker.lotNum);
           const isHovered = hoveredMarkerId === marker.id;
           const isExpanded = isSelected || isHovered;
 
@@ -307,12 +391,12 @@ export default function NeighborhoodViewport({
           else if (isNearRight) placementClass += ' align-right';
           else placementClass += ' align-center';
 
-          if (mode === 'emergency') {
+          if (marker.isLive || marker.type === 'live_incident' || mode === 'emergency') {
             return (
               <button
                 key={marker.id}
                 type="button"
-                className={`emergency-spatial-marker marker-shape-${marker.shape} ${isSelected ? 'selected' : ''} ${isExpanded ? 'expanded' : 'compact'}`}
+                className={`emergency-spatial-marker marker-shape-${marker.shape} ${marker.isLive ? 'marker-live-incident' : 'marker-simulated'} ${isSelected ? 'selected' : ''} ${isExpanded ? 'expanded' : 'compact'}`}
                 style={{
                   transform: `translate(${marker.screenX}px, ${marker.screenY}px)`,
                   '--marker-color': marker.color,
@@ -334,14 +418,33 @@ export default function NeighborhoodViewport({
             <button
               key={marker.id}
               type="button"
-              className={`neighborhood-spatial-marker type-${marker.type} ${marker.statusClass || ''} ${isSelected ? 'selected' : ''} ${isExpanded ? 'expanded' : 'compact'}`}
+              className={`neighborhood-spatial-marker type-${marker.type} ${marker.statusClass || ''} ${isSelected ? 'selected' : ''} ${isHighlighted ? 'pulse-highlighted' : ''} ${isExpanded ? 'expanded' : 'compact'}`}
               style={{
                 transform: `translate(${marker.screenX}px, ${marker.screenY}px)`,
               }}
               onMouseEnter={() => setHoveredMarkerId(marker.id)}
               onMouseLeave={() => setHoveredMarkerId(null)}
-              onClick={() => onSelectItem && onSelectItem({ type: marker.type, lotId: marker.lotId, ...marker.data })}
-              aria-label={`Select ${marker.title}`}
+              onClick={() => {
+                if (marker.type === 'resource_hub') {
+                  if (onSelectItem) onSelectItem({ type: 'discovery', category: 'resources' });
+                } else if (onSelectLot && marker.lotNum) {
+                  onSelectLot(marker.lotNum);
+                } else if (onSelectItem) {
+                  onSelectItem({ type: marker.type, lotId: marker.lotId, ...marker.data });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  if (marker.type === 'resource_hub') {
+                    if (onSelectItem) onSelectItem({ type: 'discovery', category: 'resources' });
+                  } else if (onSelectLot && marker.lotNum) {
+                    onSelectLot(marker.lotNum);
+                  }
+                }
+              }}
+              aria-label={marker.lotNum ? `Lot ${marker.lotNum} · ${marker.title}` : marker.title}
+              aria-pressed={isSelected}
             >
               <div className={`spatial-marker-pin ${marker.statusClass || ''}`}>
                 {/* Compact Anchor Glyph */}
@@ -356,7 +459,7 @@ export default function NeighborhoodViewport({
                       )}
                     </>
                   )}
-                  {marker.type === 'resource' && (
+                  {(marker.type === 'resource' || marker.type === 'resource_hub') && (
                     <Wrench size={11} className="marker-icon-glyph" />
                   )}
                   {marker.type === 'issue' && (
@@ -369,7 +472,8 @@ export default function NeighborhoodViewport({
                   <div className={`spatial-marker-hover-card ${placementClass}`} role="tooltip">
                     <div className="hover-card-header-row">
                       <span className="hover-card-resident">{marker.title}</span>
-                      <span className="hover-card-lot-tag">Lot {marker.lotNum}</span>
+                      {marker.lotNum && <span className="hover-card-lot-tag">Lot {marker.lotNum}</span>}
+                      {marker.type === 'resource_hub' && <span className="hover-card-lot-tag">Central Point</span>}
                     </div>
 
                     {marker.hasIssue && (
@@ -397,14 +501,7 @@ export default function NeighborhoodViewport({
                     )}
 
                     <div className="hover-card-meta-row">
-                      {marker.resourceCount !== undefined && marker.resourceCount > 0 ? (
-                        <span className="hover-meta-item">
-                          <Wrench size={10} style={{ marginRight: 3 }} />
-                          {marker.resourceCount} shared tools
-                        </span>
-                      ) : (
-                        <span className="hover-meta-item">Verified Proximity</span>
-                      )}
+                      <span className="hover-meta-item">Verified Proximity</span>
                       <span className="hover-meta-cta">Click to inspect</span>
                     </div>
                   </div>
@@ -429,7 +526,7 @@ export default function NeighborhoodViewport({
           </span>
           <span className="legend-chip">
             <span className="legend-dot dot-resource" />
-            <span>Shared Tools</span>
+            <span>Community Exchange</span>
           </span>
         </div>
       </div>
