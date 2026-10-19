@@ -288,6 +288,11 @@ async function runSuite() {
       assert.strictEqual(res.body.check, 'liveness');
     });
 
+    await test('Server disables X-Powered-By header to avoid runtime disclosure', async () => {
+      const res = await request(server, '/health/live');
+      assert.strictEqual(res.headers['x-powered-by'], undefined, 'X-Powered-By header must be disabled');
+    });
+
     await test('GET /health/ready returns HTTP 200 with database: connected when DB is reachable', async () => {
       const res = await request(server, '/health/ready');
       assert.strictEqual(res.status, 200);

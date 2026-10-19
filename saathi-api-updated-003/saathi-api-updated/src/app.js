@@ -15,6 +15,9 @@ const emergencyRouter = require('./routes/emergency');
 
 const app = express();
 
+// Disable X-Powered-By header to avoid disclosing the runtime
+app.disable('x-powered-by');
+
 /**
  * Resolves and validates allowed CORS origins from environment.
  *
