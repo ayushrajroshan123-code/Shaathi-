@@ -1,352 +1,144 @@
-# SAATHI
+# Saathi — The Neighbourhood That Helps
 
-### Everyday care meets real coordination.
+**Borrow a ladder. Ask a neighbour. Help someone nearby.**
 
-SAATHI is a neighborhood coordination platform built around a simple idea:
+Saathi is a neighbourhood-sharing platform built around an interactive 3D environment. It brings resource borrowing, community requests, and an early emergency-coordination experience into one place.
 
-**People in a neighborhood already have the ability to help each other. SAATHI gives that community a place to coordinate it.**
-
-From everyday requests and shared resources to neighborhood-wide awareness, SAATHI brings local coordination into one structured, spatial experience.
-
----
-
-## The Problem
-
-Neighborhoods already contain everything needed for stronger communities:
-
-* People willing to help
-* Resources that could be shared
-* Local knowledge
-* Different needs and capabilities
-* Existing relationships between neighbors
-
-What is often missing is a **coordination layer**.
-
-Important requests disappear in noisy group chats.
-Useful resources remain invisible.
-People who could help often don't know that help is needed.
-
-SAATHI is being built to address that gap.
-
----
-
-## The Product
-
-SAATHI creates a dedicated digital layer for neighborhood coordination.
-
-It combines community activity with a spatial representation of the neighborhood, allowing people to understand **what is happening, where it is happening, and where coordination is needed.**
-
-### Core capabilities
-
-| Capability         | What it enables                                |
-| ------------------ | ---------------------------------------------- |
-| **Requests**       | Surface needs within the neighborhood          |
-| **Resources**      | Discover and coordinate useful local resources |
-| **Coverage**       | Understand where support is available          |
-| **Issues**         | Surface relevant neighborhood-level concerns   |
-| **Spatial View**   | Explore neighborhood activity visually         |
-| **Multiple Modes** | Adapt coordination to different situations     |
-
----
-
-# Product Experience
-
-## A Neighborhood, Not Just a Dashboard
-
-SAATHI uses an interactive spatial environment to represent the community.
-
-Instead of reducing a neighborhood to lists and notifications, the interface gives activity a **place**.
-
-This creates a more intuitive way to understand local coordination at a glance.
-
----
-
-## Screenshots
-
-### Landing Page
+[Source Code](https://github.com/ayushrajroshan123-code/Shaathi-)
 
 ![Saathi landing page](docs/screenshots/landing.png)
 
-### Neighborhood Experience
+*Explore the neighbourhood and discover the experience.*
 
-![Saathi neighborhood experience](docs/screenshots/neighborhood.png)
+![Saathi 3D neighbourhood](docs/screenshots/neighborhood.png)
 
----
+## Why Saathi?
 
-# Interface Overview
+In my housing society, someone always needed a ladder, a drill, or an iron for a festival or a quick repair. Often, someone nearby already had the same item sitting unused in a cupboard. People bought things they might use only once simply because they didn't know what was available around them.
 
-SAATHI structures neighborhood coordination across three primary interfaces:
+That got me thinking: **what if the things we need most are already closer than we think?**
 
-* **Interactive 3D Spatial Diorama:** A Three.js spatial canvas representing community buildings, access roads, vehicles, and active neighborhood moments.
-* **Neighborhood Dashboard:** A live coordination overview featuring neighborhood pulse metrics, resource discovery, active coverage requests, and issue tracking.
-* **Contextual Coordination Surface:** Focused drawer and modal surfaces for initiating requests, coordinating resource handoffs, confirming returns, and raising neighborhood concerns.
+Saathi grew from that simple idea. I wanted to make it easier for neighbours to share what they have, ask for what they need, and build connections through everyday interactions.
 
----
+## Features
 
-# System Architecture
+- **Interactive 3D neighbourhood** — Explore a visual environment designed to make community resources and activity easier to understand.
+- **Resource sharing** — Browse available items and request to borrow what you need.
+- **Request tracking** — Follow borrowing requests through their supported workflow states.
+- **Community requests** — Ask for help, look for resources, or report local issues.
+- **Emergency-coordination concept** — Explore an early view of how neighbourhood coordination could extend beyond everyday sharing.
 
-```text
-+-----------------------------------------------------------------------+
-|                              Web Browser                              |
-|                 http://localhost:5173 (Vite Dev Server)               |
-+-----------------------------------------------------------------------+
-                                   |
-                                   | HTTP / JSON REST
-                                   v
-+-----------------------------------------------------------------------+
-|                            saathi-frontend                            |
-|             React 19 + Three.js Spatial View + Framer Motion          |
-|  - Spatial diorama, interactive buildings, and scenario directors     |
-|  - Real-time dashboard, resource discovery, and coordination drawers  |
-+-----------------------------------------------------------------------+
-                                   |
-                                   | Fetch API requests (VITE_API_BASE_URL)
-                                   v
-+-----------------------------------------------------------------------+
-|                          saathi-api-updated                           |
-|                Node.js + Express 4 REST API (Port 3000)               |
-|  - Cookie/Token session context & actor authentication (Scrypt)       |
-|  - Participant authorization & community hub boundaries               |
-|  - State machines: resources, handoffs, issues, queries               |
-+-----------------------------------------------------------------------+
-                                   |
-                                   | pg pool (DATABASE_URL, Port 5432)
-                                   v
-+-----------------------------------------------------------------------+
-|                           PostgreSQL (v14+)                           |
-|  - Relational schema with check constraints and integrity triggers    |
-|  - Concurrency row locks (FOR UPDATE) & atomic state transitions      |
-+-----------------------------------------------------------------------+
-```
+The goal is to connect the visual environment to meaningful actions, rather than build a 3D scene that looks impressive but does little.
 
----
+## Engineering and design decisions
 
-# Technology Stack
+### Making the 3D experience useful
 
-| Layer | Technology | Details / Role |
-| :--- | :--- | :--- |
-| **Frontend Framework** | React 19 (`react` 19.3) | Declarative UI components and state management |
-| **Build & Tooling** | Vite 8 (`vite` 8.3) | Modern ESM development server and production bundler |
-| **3D Spatial Graphics** | Three.js (`three` 0.186) | Interactive 3D neighborhood diorama and spatial canvas |
-| **Animation & Motion** | Framer Motion (`framer-motion` 13.4) | UI layout transitions and micro-animations |
-| **Smooth Scrolling** | Lenis (`lenis` 1.3) | Smooth page scrolling orchestration |
-| **Icons** | Lucide React (`lucide-react` 1.49) | Clean, accessible SVG iconography |
-| **Backend Runtime** | Node.js (v18.11+ / v20+) | CommonJS runtime supporting native `--watch` |
-| **API Framework** | Express 4 (`express` 4.19) | HTTP routing, JSON middleware, and error handling |
-| **Database Client** | `pg` (node-postgres 8.12) | Connection pooling, parameterized queries, and transactions |
-| **Security & Auth** | Node.js `crypto` (`scrypt`) | Constant-time password hashing and token generation |
-| **Database** | PostgreSQL (v14+) | Relational tables, foreign keys, enums, check constraints, and triggers |
+The 3D environment is a core part of the product, not just decoration. Its purpose is to give neighbourhood activity a visual context while keeping the experience understandable for first-time visitors.
 
----
+### Using a structured backend
 
-# Project Structure
+Saathi uses a Node.js backend and PostgreSQL database to support application workflows and persistent data. Keeping backend responsibilities separate from the React interface provides a clearer foundation for testing and future development.
 
-```text
-shaathi/
-├── saathi-frontend/                # React 19 + Vite frontend application
-│   ├── src/
-│   │   ├── api/                    # API client modules
-│   │   ├── components/             # Reusable UI components
-│   │   ├── dashboard/              # Dashboard views, modals, and pulse cards
-│   │   ├── neighborhood/           # Three.js 3D diorama, props, and scenarios
-│   │   ├── App.jsx                 # Main application root
-│   │   └── main.js                 # Frontend entrypoint
-│   ├── .env.example                # Frontend environment template
-│   └── package.json                # Frontend scripts and dependencies
-├── saathi-api-updated-003/
-│   └── saathi-api-updated/         # Express + PostgreSQL backend API
-│       ├── database/               # Frozen schema and migration SQL
-│       ├── scripts/                # Database migrations and seed utilities
-│       ├── src/
-│       │   ├── middleware/         # Session context and role auth
-│       │   ├── routes/             # Express route handlers
-│       │   ├── services/           # Business logic and database transactions
-│       │   ├── db.js               # PostgreSQL connection pool configuration
-│       │   └── server.js           # Express application entrypoint
-│       ├── tests/                  # Security, concurrency, and integration tests
-│       ├── .env.example            # Backend environment template
-│       └── package.json            # Backend scripts and dependencies
-├── .gitignore                      # Repository ignore configuration
-└── README.md                       # Repository overview and setup guide
-```
+### Treating security as part of development
 
----
+Authentication controls, security headers, migration handling, and regression testing have been part of the engineering work. The implementation and its limits should be evaluated through the actual code and tests rather than assumed from the presence of a feature.
 
-# Local Setup Guide
+### Making changes deliberately
 
-Follow these steps to run SAATHI locally on your workstation.
+I have prioritised targeted changes, regression checks, and verification over broad rewrites without clear evidence that they are needed. This helps protect working functionality while the project evolves.
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React, JavaScript, Vite |
+| 3D environment | Three.js |
+| Backend | Node.js |
+| Database | PostgreSQL |
+| Testing | Automated application, API, and security checks |
+
+## Testing and verification
+
+In a previously reviewed test run, the following results were reported:
+
+| Test group | Result |
+|---|---:|
+| Frontend assertions | 107/107 passed |
+| Boundary tests | 21/21 passed |
+| CORS tests | 11/11 passed |
+| Backend hardening tests | 23/23 passed |
+| Frontend production build | Passed |
+
+These are results from the earlier reviewed run, not a guarantee of the current branch's status. They do not establish that every user workflow works end to end.
+
+Database integration testing, live deployment behaviour, and complete end-to-end workflows require separate verification.
+
+## Run locally
+
+Follow these steps to run Saathi locally using a development or test database:
 
 ### Prerequisites
 
-* **Node.js:** v18.11+ or v20+ recommended (Node.js v18.11+ is required for the backend's native `--watch` flag).
-* **npm:** v9+ (bundled with Node.js).
-* **PostgreSQL:** v14+ (local PostgreSQL service or accessible managed database).
+- **Node.js** (v18.11+ or v20+)
+- **PostgreSQL** (v14+)
+- **npm** (v9+)
 
----
+### 1. Database and backend setup
 
-### Step 1 — Clone Repository
+Ensure PostgreSQL is running, then initialize the database and API:
 
 ```bash
-git clone https://github.com/ayushrajroshan123-code/Shaathi-.git shaathi
-cd shaathi
+# Create local database
+createdb saathi
+
+# Navigate to backend directory and install dependencies
+cd saathi-api-updated-003/saathi-api-updated
+npm install
+
+# Configure environment variables
+cp .env.example .env
+
+# Run database migrations and start development server
+npm run migrate
+npm run dev
 ```
 
----
+The backend API will start on `http://localhost:3000`.
 
-### Step 2 — Database Setup & Backend Configuration
+### 2. Frontend web application
 
-1. **Create Database:** Ensure PostgreSQL is running and create a local database:
-   ```bash
-   createdb saathi
-   ```
-   *(Or run `CREATE DATABASE saathi;` inside your `psql` console.)*
+In a separate terminal, start the frontend client:
 
-2. **Navigate to Backend Directory:**
-   ```bash
-   cd saathi-api-updated-003/saathi-api-updated
-   ```
+```bash
+# Navigate to frontend directory and install dependencies
+cd saathi-frontend
+npm install
 
-3. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
+# Configure environment variables
+cp .env.example .env
 
-4. **Configure Environment:** Copy the template to `.env`:
-   - On Linux/macOS:
-     ```bash
-     cp .env.example .env
-     ```
-   - On Windows (PowerShell):
-     ```powershell
-     Copy-Item .env.example .env
-     ```
+# Start frontend development server
+npm run dev
+```
 
-5. **Edit `.env` Configuration:**
-   Open `.env` and configure your database parameters:
-   - `DATABASE_URL`: `postgres://<user>:<password>@localhost:5432/saathi`
-   - `PORT`: Server port (defaults to `3000`).
-   - `ALLOWED_ORIGINS`: Allowed CORS origins (`http://localhost:5173,http://127.0.0.1:5173` for local development).
-   - `DATABASE_SSL`: Set to `false` for local connections; set to `require` for managed cloud databases.
-   - `ENABLE_EMERGENCY_ROUTES`: Set to `false` (default) for Phase 1 scope; set to `true` if evaluating emergency routes.
+The frontend application will be accessible at `http://localhost:5173`.
 
-6. **Run Migrations & Verify Schema:**
-   Run the migration scripts to initialize the database:
-   ```bash
-   # Preview pending migration SQL statements
-   npm run migrate:dry-run
+Use a development or test database. Do not commit credentials, database URLs, tokens, or other secrets to the repository.
 
-   # Apply schema migrations
-   npm run migrate
+## Roadmap
 
-   # Verify database matches canonical schema
-   npm run verify-schema
+- Complete and verify remaining borrowing-request transitions and edge cases.
+- Improve interface feedback and loading, error, and empty states.
+- Develop richer neighbour discovery with appropriate privacy protections.
+- Expand notification and resource-matching capabilities.
+- Complete and validate end-to-end emergency-coordination workflows.
+- Strengthen automated integration testing and continuous integration.
 
-   # Optional: Seed development fixture data
-   npm run db:seed
-   ```
+## What I've learned
 
-7. **Start Backend Server:**
-   ```bash
-   npm run dev
-   ```
-   The backend API will start on `http://localhost:3000`.
+Building Saathi has taught me that getting an application to run is only the beginning. Features need to behave correctly across different states, interfaces need to make sense to new users, and tests need to verify meaningful behaviour.
 
----
+It has also reinforced the importance of privacy, maintainable backend design, and making small changes that can be verified.
 
-### Step 3 — Frontend Setup
-
-1. **Open a New Terminal and Navigate to Frontend Directory:**
-   ```bash
-   cd saathi-frontend
-   ```
-
-2. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment:** Copy the frontend template to `.env`:
-   - On Linux/macOS:
-     ```bash
-     cp .env.example .env
-     ```
-   - On Windows (PowerShell):
-     ```powershell
-     Copy-Item .env.example .env
-     ```
-
-4. **Verify Frontend Environment Variables:**
-   Open `.env` and confirm:
-   - `VITE_API_BASE_URL`: Base URL of the backend API (defaults to `http://localhost:3000` in local dev).
-   - `VITE_DEMO_MODE`: Set to `false` (default) for standard development.
-
-5. **Start Frontend Development Server:**
-   ```bash
-   npm run dev
-   ```
-   The frontend application will be accessible at `http://localhost:5173`.
-
----
-
-### Required Services Summary
-
-To run the complete application locally, ensure all three services are active:
-
-| Service | Address / Port | Start Command |
-| :--- | :--- | :--- |
-| **PostgreSQL Database** | `localhost:5432` | System service / PostgreSQL daemon |
-| **Backend API** | `http://localhost:3000` | `npm run dev` (in `saathi-api-updated-003/saathi-api-updated`) |
-| **Frontend Web App** | `http://localhost:5173` | `npm run dev` (in `saathi-frontend`) |
-
----
-
-# Feature Status & Architectural Boundaries
-
-SAATHI is an actively developed product prototype. The codebase clearly delineates implemented core functionality, gated features, and planned architectural scope.
-
-### Implemented Core Features
-
-* **Interactive Landing Experience:** Public 3D diorama canvas, hero narrative, and smooth-scrolling community sections.
-* **Neighborhood Dashboard:** Live pulse counters, coverage status, active community requests, and spatial viewport.
-* **Authentication & Sessions:** Token/cookie session context, constant-time Scrypt password hashing, and role verification (`resident`, `coordinator`).
-* **Resource Sharing Lifecycle:** Community inventory discovery, borrowing requests, owner approval/declining, cancelation, and return handoff flows.
-* **Single Active Possession Invariant:** Atomic locking (`SELECT ... FOR UPDATE`) prevents concurrent double-booking of resources during approval.
-* **Coverage Requests:** Requests for neighborhood presence/support with access-handoff status transitions.
-* **Neighborhood Issues:** Local issue tracking (`reported`, `in_progress`, `attention_needed`, `resolved`) with transition validation.
-* **Community Queries:** Shared neighborhood interest queries (`GET /queries`, `POST /queries`).
-
-### Gated Features (Require Explicit Configuration)
-
-* **Emergency & SOS Routes (`/incidents`, `/sos-events`, `/emergency-alerts`):** The emergency routing and service layer is implemented in code but strictly gated behind `ENABLE_EMERGENCY_ROUTES=true` in `src/app.js`. Emergency routes remain disabled by default in standard deployments to preserve Phase 1 pilot scope.
-* **Demo Persona Convenience Login:** Fictional persona shortcuts on the frontend are gated behind `VITE_DEMO_MODE=true` in `saathi-frontend/.env`. In the backend, demo resets and seeders require explicit guards (`DEMO_MODE=true`, `ALLOW_DEMO_RESET=true`, `EXPECTED_DEMO_DB_NAME=saathi_demo`, `EXPECTED_DEMO_ROLE=...`) targeting only dedicated demo instances.
-
-### Explicit Limitations & Planned Scope
-
-* **Multi-Hub Isolation:** Authorization is enforced at the record level for participants and coordinators, and UUIDs prevent record enumeration. However, general listing endpoints currently scope by query parameters rather than physical schema-level tenant partitioning. Full multi-tenant isolation is planned for future phases.
-* **Calendar-Based Resource Scheduling:** The current concurrency control verifies immediate active availability at the moment of request approval. Advanced forward-looking calendar scheduling and overlapping future time-slot bookings are planned for later phases.
-* **Issue Assignee Tracking:** Moving an issue to `in_progress` signifies neighborhood-level action; individual member assignment workflows are not currently tracked in the database schema.
-* **Event Audit Trail:** Status updates modify records in place; durable event audit log tables are not yet implemented.
-
----
-
-# Philosophy
-
-Technology should not replace the relationships that already exist in a neighborhood.
-
-It should make those relationships **easier to activate when they matter.**
-
-**Everyday care meets real coordination.**
-
----
-
-# Development
-
-This repository represents an actively evolving product.
-
-The public codebase provides visibility into the project and its implementation while keeping certain product, business, and internal architectural details intentionally undisclosed.
-
----
-
-# License
-
-No open-source license has currently been granted for this repository.
+Saathi is still evolving. My aim is to keep improving it while being clear about what works, what needs attention, and what has yet to be built.
