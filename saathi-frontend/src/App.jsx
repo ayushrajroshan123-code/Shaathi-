@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import EditorialStatement from './components/EditorialStatement';
@@ -196,65 +197,80 @@ export default function App() {
   if (view === 'dashboard') {
     if (sessionState === 'checking_session') {
       return (
-        <div className="saathi-login-page">
-          <div className="login-card-container" style={{ textAlign: 'center', padding: '64px 24px' }}>
-            <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '14px' }}>
-              Verifying secure neighborhood session...
-            </p>
+        <>
+          <div className="saathi-login-page">
+            <div className="login-card-container" style={{ textAlign: 'center', padding: '64px 24px' }}>
+              <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '14px' }}>
+                Verifying secure neighborhood session...
+              </p>
+            </div>
           </div>
-        </div>
+          <SpeedInsights />
+        </>
       );
     }
 
     if (sessionState === 'unauthenticated') {
       return (
-        <LoginView
-          onLoginSuccess={handleLoginSuccess}
-          sessionNotice={sessionNotice}
-        />
+        <>
+          <LoginView
+            onLoginSuccess={handleLoginSuccess}
+            sessionNotice={sessionNotice}
+          />
+          <SpeedInsights />
+        </>
       );
     }
 
     return (
-      <Dashboard
-        currentUser={currentUser}
-        onLogout={handleLogout}
-        onNavigateLanding={() => {
-          setView('landing');
-          if (typeof window !== 'undefined') {
-            window.location.hash = '#landing';
-          }
-        }}
-      />
+      <>
+        <Dashboard
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onNavigateLanding={() => {
+            setView('landing');
+            if (typeof window !== 'undefined') {
+              window.location.hash = '#landing';
+            }
+          }}
+        />
+        <SpeedInsights />
+      </>
     );
   }
 
   if (view === 'login') {
     return (
-      <LoginView
-        onLoginSuccess={handleLoginSuccess}
-        sessionNotice={sessionNotice}
-      />
+      <>
+        <LoginView
+          onLoginSuccess={handleLoginSuccess}
+          sessionNotice={sessionNotice}
+        />
+        <SpeedInsights />
+      </>
     );
   }
 
   if (view === 'neighborhood') {
     return (
-      <NeighborhoodStage1
-        onBack={() => {
-          if (sessionState === 'authenticated') {
-            setView('dashboard');
-            if (typeof window !== 'undefined') {
-              window.location.hash = '#dashboard';
+      <>
+        <NeighborhoodStage1
+          onBack={() => {
+            if (sessionState === 'authenticated') {
+              setView('dashboard');
+              if (typeof window !== 'undefined') {
+                window.location.hash = '#dashboard';
+              }
+            } else {
+              setView('landing');
+              if (typeof window !== 'undefined') {
+                window.location.hash = '#landing';
+              }
             }
-          } else {
-            setView('landing');
-            if (typeof window !== 'undefined') {
-              window.location.hash = '#landing';
-            }
-          }
-        }}
-      />
+          }}
+        />
+        <SpeedInsights />
+      </>
     );
   }
 
@@ -303,6 +319,8 @@ export default function App() {
           <span style={{ opacity: 0.6 }}>↗</span>
         </button>
       </div>
+
+      <SpeedInsights />
     </>
   );
 }
